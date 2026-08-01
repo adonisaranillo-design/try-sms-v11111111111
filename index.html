@@ -453,6 +453,24 @@
           <input type="file" id="importFile" accept="application/json" style="display:none;">
         </label>
       </div>
+
+      <div class="card" style="border-color:#e2c6c2; margin-top:26px;">
+        <h2 style="color:var(--danger);"><span class="num" style="background:var(--danger);">!</span> Danger Zone</h2>
+        <p class="desc">Ingat sa mga action dito — permanente ang mga ito. Awtomatikong mag-e-export ng backup bago magpatuloy.</p>
+
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:260px; border:1px solid var(--line); border-radius:9px; padding:16px;">
+            <div style="font-weight:600; font-size:13px; margin-bottom:4px; color:var(--navy-deep);">Simulan ang Bagong School Year</div>
+            <div style="font-size:12px; color:var(--ink-soft); margin-bottom:12px; line-height:1.5;">I-e-export muna nang awtomatiko ang kasalukuyang data bilang backup, tapos aalisin ang Masterlist, Grades, at Attendance (mananatili ang School Info sa Setup). Papapasukin ka ng bagong School Year.</div>
+            <button class="btn btn-gold btn-sm" id="btnNewSchoolYear">&#128197; Simulan ang Bagong School Year</button>
+          </div>
+          <div style="flex:1; min-width:260px; border:1px solid var(--line); border-radius:9px; padding:16px;">
+            <div style="font-weight:600; font-size:13px; margin-bottom:4px; color:var(--danger);">I-reset Lahat ng Data</div>
+            <div style="font-size:12px; color:var(--ink-soft); margin-bottom:12px; line-height:1.5;">Buburahin ANG LAHAT — Setup, Masterlist, Grades, Attendance, Logo. Gagawing blangko ang account na ito, kasama ang cloud data kung naka-login. Kailangang i-type ang "RESET" para kumpirmahin.</div>
+            <button class="btn btn-danger-ghost btn-sm" id="btnResetAllData">&#128465; I-reset Lahat</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ========== MASTERLIST VIEW ========== -->
@@ -885,6 +903,7 @@
    a browser and data will persist between visits/sessions)
    ========================================================= */
 const STORE_KEYS = { setup: 'sms_setup_v1', students: 'sms_students_v1' };
+const ARCHIVE_STORE_KEY = 'sms_archives_v1';
 
 function loadSetup(){
   try{ return JSON.parse(localStorage.getItem(STORE_KEYS.setup)) || {}; }catch(e){ return {}; }
@@ -901,6 +920,8 @@ function saveStudents(list){
 
 let setupData = loadSetup();
 let students = loadStudents();
+let archivesData = loadJSON(ARCHIVE_STORE_KEY, {}); // { "2026-2027": {setup,students,subjects,grades,attendance,attMonth,archivedAt} }
+function saveArchives(){ saveJSON(ARCHIVE_STORE_KEY, archivesData); }
 
 function uid(){ return 'st_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -946,7 +967,7 @@ function setCloudPillState(state){
 function collectFullState(){
   return {
     setup: setupData, students: students, subjects: subjectsByCtx, grades: gradesByCtx,
-    gctx: gctx, attendance: attendance, attMonth: attMonth, updatedAt: Date.now()
+    gctx: gctx, attendance: attendance, attMonth: attMonth, archives: archivesData, updatedAt: Date.now()
   };
 }
 
@@ -959,6 +980,7 @@ function applyFullState(data){
   if(data.gctx) gctx = data.gctx;
   attendance = data.attendance || {};
   attMonth = data.attMonth || attMonth;
+  archivesData = data.archives || {};
 
   saveSetup(setupData);
   saveStudents(students);
@@ -967,6 +989,7 @@ function applyFullState(data){
   saveJSON(GSTORE_KEYS.gctx, gctx);
   saveJSON(ATT_STORE_KEY, attendance);
   saveJSON('sms_att_month_v1', attMonth);
+  saveArchives();
   isApplyingCloudState = false;
 
   fillSetupForm();
@@ -979,6 +1002,7 @@ function applyFullState(data){
   const attSel = document.getElementById('att_month');
   if(attSel) attSel.value = attMonth;
   renderAttendanceView();
+  renderArchivesList();
   showToast('Na-sync ang data mula sa cloud.');
 }
 
@@ -993,18 +1017,44 @@ function queueCloudSync(){
   }, 900);
 }
 
+let pendingIsNewSignup = false;
+
+function blankState(){
+  return {
+    setup: {}, students: [], subjects: {}, grades: {},
+    gctx: { gradeLevel: '11', curriculum: 'new', period: '1' },
+    attendance: {}, attMonth: 'JUNE', archives: {}, updatedAt: Date.now()
+  };
+}
+
 async function handleSuccessfulLogin(user){
   currentUser = user;
   document.getElementById('authOverlay').style.display = 'none';
   document.getElementById('btnAccountMenu').style.display = 'inline-flex';
   document.getElementById('accountEmailLabel').textContent = user.email;
   setCloudPillState('synced');
+
+  if(pendingIsNewSignup){
+    // brand-new account — ALWAYS start from a clean slate, regardless of
+    // whatever this device's browser happens to have cached locally from
+    // a previous person's session. Isolation between accounts matters more
+    // than convenience here.
+    pendingIsNewSignup = false;
+    applyFullState(blankState());
+    try{ await fbDb.collection('users').doc(user.uid).set(blankState()); }
+    catch(err){ console.error(err); setCloudPillState('error'); }
+    return;
+  }
+
   try{
     const doc = await fbDb.collection('users').doc(user.uid).get();
     if(doc.exists){
       applyFullState(doc.data());
     } else {
-      queueCloudSync(); // first login on this account — push current local data up
+      // existing account somehow has no cloud doc yet — default to blank
+      // rather than silently uploading whatever is sitting in local storage
+      applyFullState(blankState());
+      queueCloudSync();
     }
   }catch(err){
     console.error(err);
@@ -1047,9 +1097,14 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async ()=>{
   const btn = document.getElementById('btnAuthSubmit');
   btn.disabled = true; const originalText = btn.textContent; btn.textContent = 'Please wait...';
   try{
-    if(authMode === 'login') await fbAuth.signInWithEmailAndPassword(email, password);
-    else await fbAuth.createUserWithEmailAndPassword(email, password);
+    if(authMode === 'login'){
+      await fbAuth.signInWithEmailAndPassword(email, password);
+    } else {
+      pendingIsNewSignup = true;
+      await fbAuth.createUserWithEmailAndPassword(email, password);
+    }
   }catch(err){
+    pendingIsNewSignup = false;
     showAuthError(authErrorMessage(err));
   }finally{
     btn.disabled = false; btn.textContent = originalText;
@@ -1059,13 +1114,11 @@ document.getElementById('btnSkipAuth').addEventListener('click', ()=>{
   document.getElementById('authOverlay').style.display = 'none';
 });
 document.getElementById('btnAccountMenu').addEventListener('click', ()=>{
-  if(confirm('Gusto mo bang mag-logout?')){
+  if(confirm('Gusto mo bang mag-logout?\n\nPara sa privacy (lalo na kung shared na computer ito), aalisin din ang naka-save na data sa browser na ito.')){
     fbAuth.signOut().then(()=>{
-      currentUser = null;
-      document.getElementById('btnAccountMenu').style.display = 'none';
-      document.getElementById('cloudPill').style.display = 'none';
-      document.getElementById('authOverlay').style.display = 'flex';
-      showToast('Na-logout.');
+      // clear all local caches so the next person on this device doesn't see this account's data
+      [STORE_KEYS.setup, STORE_KEYS.students, GSTORE_KEYS.subjects, GSTORE_KEYS.grades, GSTORE_KEYS.gctx, ATT_STORE_KEY, 'sms_att_month_v1'].forEach(k=> localStorage.removeItem(k));
+      window.location.reload();
     });
   }
 });
@@ -1443,7 +1496,7 @@ function downloadFile(filename, content, type){
 }
 
 document.getElementById('btnExportAll').addEventListener('click', ()=>{
-  const payload = { setup: setupData, students, exportedAt: new Date().toISOString() };
+  const payload = collectFullState();
   downloadFile(`sms_backup_${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(payload, null, 2), 'application/json');
   showToast('Na-export ang buong backup (JSON).');
 });
@@ -1456,17 +1509,163 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
     try{
       const payload = JSON.parse(evt.target.result);
       if(!confirm('Papalitan nito ang kasalukuyang data sa browser na ito. Magpatuloy?')) return;
-      setupData = payload.setup || {};
-      students = payload.students || [];
-      saveSetup(setupData); saveStudents(students);
-      fillSetupForm(); renderLetterhead(); renderMasterlist();
+      applyFullState(payload);
+      if(currentUser) queueCloudSync();
       showToast('Successfully na-import ang backup.');
     }catch(err){
+      console.error(err);
       showToast('Hindi ma-import ang file. Siguraduhing tamang JSON backup ito.', true);
     }
   };
   reader.readAsText(file);
   e.target.value = '';
+});
+
+document.getElementById('btnNewSchoolYear').addEventListener('click', ()=>{
+  const currentSY = (setupData.schoolYear || '').trim();
+  const archiveLabel = currentSY || `Untitled (${new Date().toISOString().slice(0,10)})`;
+  if(!confirm(`I-aarchive ang kasalumuyang data bilang "${archiveLabel}" — mababalikan mo pa rin ito anumang oras sa loob ng system (at ma-a-auto-download din bilang backup file). Magpatuloy?`)) return;
+
+  // 1) archive current data in-system (and download a copy as a safety net)
+  const snapshot = {
+    setup: setupData, students, subjects: subjectsByCtx, grades: gradesByCtx,
+    attendance, attMonth, archivedAt: new Date().toISOString()
+  };
+  archivesData[archiveLabel] = snapshot;
+  saveArchives();
+  downloadFile(`sms_archive_${archiveLabel.replace(/\s+/g,'_')}.json`, JSON.stringify(snapshot, null, 2), 'application/json');
+
+  // 2) ask for the new school year and clear the active workspace
+  const newSY = prompt('Ano ang School Year na papasok? (hal. 2027-2028)', '');
+  if(newSY === null) { showToast(`Na-archive bilang "${archiveLabel}", pero hindi na-clear ang workspace.`); renderArchivesList(); flashSaved(); return; }
+  if(!confirm(`Aalisin ang Masterlist, Grades, at Attendance para sa bagong School Year (${newSY || 'walang nailagay'}). Mananatili ang School Info sa Setup. Sigurado ka na?`)){
+    renderArchivesList(); flashSaved(); return;
+  }
+
+  students = [];
+  subjectsByCtx = {};
+  gradesByCtx = {};
+  attendance = {};
+  attMonth = 'JUNE';
+  if(newSY) setupData.schoolYear = newSY;
+
+  saveStudents(students);
+  saveJSON(GSTORE_KEYS.subjects, subjectsByCtx);
+  saveJSON(GSTORE_KEYS.grades, gradesByCtx);
+  saveJSON(ATT_STORE_KEY, attendance);
+  saveJSON('sms_att_month_v1', attMonth);
+  saveSetup(setupData);
+
+  fillSetupForm();
+  renderLetterhead();
+  renderMasterlist();
+  syncGradeLevelSemesterUI();
+  renderGradesView();
+  renderSummaryView();
+  const attSel = document.getElementById('att_month');
+  if(attSel) attSel.value = attMonth;
+  renderAttendanceView();
+  renderArchivesList();
+  flashSaved();
+  showToast(`Na-archive ang "${archiveLabel}" at handa na ang workspace para sa bagong School Year!`);
+});
+
+function renderArchivesList(){
+  const box = document.getElementById('archivesList');
+  if(!box) return;
+  const labels = Object.keys(archivesData).sort().reverse();
+  if(labels.length === 0){
+    box.innerHTML = `<div style="font-size:11.5px; color:var(--ink-soft); padding:8px 0;">Wala pang naka-archive na School Year.</div>`;
+    return;
+  }
+  box.innerHTML = labels.map(label=>{
+    const snap = archivesData[label];
+    const count = (snap.students || []).length;
+    return `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:7px; margin-bottom:6px;">
+        <div>
+          <div style="font-size:12.5px; font-weight:600; color:var(--navy-deep);">${escapeHtml(label)}</div>
+          <div style="font-size:10.5px; color:var(--ink-soft);">${count} learners &middot; na-archive ${snap.archivedAt ? new Date(snap.archivedAt).toLocaleDateString() : ''}</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-ghost btn-sm" data-archrestore="${escapeHtml(label)}">&#8635; Ibalik</button>
+          <button class="btn btn-danger-ghost btn-sm" data-archdelete="${escapeHtml(label)}">&#128465;</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  box.querySelectorAll('[data-archrestore]').forEach(btn=>{
+    btn.addEventListener('click', ()=> restoreArchive(btn.dataset.archrestore));
+  });
+  box.querySelectorAll('[data-archdelete]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const label = btn.dataset.archdelete;
+      if(!confirm(`Tanggalin ang archive na "${label}"? Hindi na ito mababawi.`)) return;
+      delete archivesData[label];
+      saveArchives();
+      renderArchivesList();
+      flashSaved();
+      showToast('Tinanggal ang archive.');
+    });
+  });
+}
+
+function restoreArchive(label){
+  const snap = archivesData[label];
+  if(!snap) return;
+  const currentSY = (setupData.schoolYear || '').trim();
+  const currentLabel = currentSY || `Untitled (${new Date().toISOString().slice(0,10)})`;
+  if(!confirm(`Ibabalik ang "${label}" bilang ACTIVE na workspace. Ang kasalukuyang data ay awtomatiko munang ia-archive bilang "${currentLabel}" bago mag-switch. Magpatuloy?`)) return;
+
+  // archive whatever is currently active first, so nothing is lost
+  archivesData[currentLabel] = {
+    setup: setupData, students, subjects: subjectsByCtx, grades: gradesByCtx,
+    attendance, attMonth, archivedAt: new Date().toISOString()
+  };
+
+  setupData = snap.setup || {};
+  students = snap.students || [];
+  subjectsByCtx = snap.subjects || {};
+  gradesByCtx = snap.grades || {};
+  attendance = snap.attendance || {};
+  attMonth = snap.attMonth || 'JUNE';
+  delete archivesData[label]; // now active, no longer "archived"
+
+  saveSetup(setupData); saveStudents(students);
+  saveJSON(GSTORE_KEYS.subjects, subjectsByCtx);
+  saveJSON(GSTORE_KEYS.grades, gradesByCtx);
+  saveJSON(ATT_STORE_KEY, attendance);
+  saveJSON('sms_att_month_v1', attMonth);
+  saveArchives();
+
+  fillSetupForm();
+  updateLogoPreview();
+  renderLetterhead();
+  renderMasterlist();
+  syncGradeLevelSemesterUI();
+  renderGradesView();
+  renderSummaryView();
+  const attSel = document.getElementById('att_month');
+  if(attSel) attSel.value = attMonth;
+  renderAttendanceView();
+  renderArchivesList();
+  flashSaved();
+  showToast(`Na-restore ang "${label}" bilang active workspace.`);
+}
+
+document.getElementById('btnResetAllData').addEventListener('click', ()=>{
+  const typed = prompt('Buburahin ANG LAHAT ng data ng account na ito (Setup, Masterlist, Grades, Attendance, Logo) — kasama ang cloud data kung naka-login. Hindi na ito mababawi.\n\nI-type ang RESET para kumpirmahin:');
+  if(typed !== 'RESET'){ showToast('Kinansela ang pag-reset.'); return; }
+
+  const blank = blankState();
+  applyFullState(blank);
+  if(currentUser){
+    fbDb.collection('users').doc(currentUser.uid).set(blank)
+      .then(()=> showToast('Na-reset ang lahat ng data (local at cloud).'))
+      .catch(err=>{ console.error(err); showToast('Na-reset ang local data, pero may error sa cloud.', true); });
+  } else {
+    showToast('Na-reset ang lahat ng local data.');
+  }
 });
 
 document.getElementById('btnExportCsv').addEventListener('click', ()=>{
