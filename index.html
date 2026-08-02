@@ -216,6 +216,33 @@
   }
   .idchip.male{ background:#e4eef6; color:var(--male); }
   .col-hover{ background: rgba(199,154,58,0.28) !important; }
+
+  .dash-group{ margin-bottom:30px; }
+  .dash-group-label{
+    font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
+    font-weight:600; margin-bottom:12px; padding-left:2px;
+  }
+  .dash-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; }
+  .dash-tile{
+    display:flex; flex-direction:column; align-items:flex-start; gap:8px;
+    background:var(--paper-card); border:1px solid var(--line); border-radius:12px;
+    padding:18px 18px 16px; cursor:pointer; text-align:left;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .dash-tile:hover{ transform:translateY(-2px); box-shadow:0 8px 20px -8px rgba(22,50,79,0.25); border-color:var(--gold); }
+  .dash-tile:disabled{ opacity:.45; cursor:not-allowed; }
+  .dash-tile:disabled:hover{ transform:none; box-shadow:none; border-color:var(--line); }
+  .dash-tile .dt-icon{
+    width:38px; height:38px; border-radius:9px; background:rgba(22,50,79,0.06);
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+  }
+  .dash-tile .dt-title{ font-weight:600; font-size:13.5px; color:var(--navy-deep); }
+  .dash-tile .dt-desc{ font-size:11.5px; color:var(--ink-soft); line-height:1.4; }
+  .dash-tile .dt-tag{
+    font-size:9px; letter-spacing:.06em; text-transform:uppercase; background:var(--gold-soft);
+    color:#5c4713; padding:2px 7px; border-radius:20px; margin-top:2px;
+  }
   .idchip.female{ background:#f6e5ee; color:var(--female); }
   .row-actions{ display:flex; gap:5px; }
   .icon-btn{
@@ -320,6 +347,19 @@
   </div>
 </div>
 
+<!-- ================= FULL-PAGE DASHBOARD / MENU ================= -->
+<div id="dashboardView" style="display:none; position:fixed; inset:0; z-index:60; background:var(--paper); background-image:radial-gradient(circle at 1px 1px, rgba(22,50,79,0.05) 1px, transparent 0); background-size:22px 22px; overflow-y:auto;">
+  <div style="max-width:960px; margin:0 auto; padding:48px 28px 60px;">
+    <div style="text-align:center; margin-bottom:38px;">
+      <div id="dashLogoMark" style="width:64px; height:64px; border-radius:14px; margin:0 auto 14px; background:radial-gradient(circle at 30% 30%, var(--gold-soft), var(--gold) 65%, #a97f26); display:flex; align-items:center; justify-content:center; font-family:'Lora',serif; font-weight:700; color:var(--navy-deep); font-size:24px; overflow:hidden; box-shadow:var(--shadow);">SF</div>
+      <h1 id="dashSchoolName" style="font-family:'Lora',serif; font-weight:700; font-size:24px; color:var(--navy-deep); margin:0 0 4px;">Student Management System</h1>
+      <div id="dashSchoolSub" style="font-size:13px; color:var(--ink-soft);">Piliin ang gusto mong buksan</div>
+    </div>
+
+    <div id="dashGroups"></div>
+  </div>
+</div>
+
 <div class="app">
 
 
@@ -351,6 +391,9 @@
     <button class="nav-btn" data-view="attendance"><span class="ic">&#128197;</span> Attendance</button>
     <button class="nav-btn" data-view="awards"><span class="ic">&#127942;</span> Awards</button>
 
+    <div class="nav-group-label">History</div>
+    <button class="nav-btn" data-view="archives"><span class="ic">&#128230;</span> Archived School Years</button>
+
     <div class="sidebar-foot">
       Data is saved in this browser only (local storage). Use Export regularly to back up.
     </div>
@@ -360,6 +403,7 @@
   <div class="main">
     <div class="topbar">
       <div>
+        <button class="btn btn-ghost btn-sm no-print" id="btnGoHome" title="Bumalik sa Menu" style="margin-bottom:6px;">&#8962; Menu</button>
         <h1 id="pageTitle">Setup</h1>
         <div class="sub" id="pageSub">School, class, and roster information</div>
       </div>
@@ -892,6 +936,16 @@
       </div>
     </div>
 
+    <!-- ========== ARCHIVES VIEW ========== -->
+    <div class="view" id="view-archives" hidden>
+      <div class="banner"><span class="em">&#128230;</span><div>Kapag "Simulan ang Bagong School Year" ang ginamit mo sa Setup, awtomatikong naka-save dito ang dating data — makikita mo pa rin anumang oras, at pwede mong ibalik bilang active workspace kung kailangan.</div></div>
+      <div class="card">
+        <h2><span class="num">H</span> Mga Naka-archive na School Year</h2>
+        <p class="desc">Read-only — para tignan lang. I-click ang "Ibalik" para gawing active workspace ulit.</p>
+        <div id="archivesList"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1033,6 +1087,7 @@ async function handleSuccessfulLogin(user){
   document.getElementById('btnAccountMenu').style.display = 'inline-flex';
   document.getElementById('accountEmailLabel').textContent = user.email;
   setCloudPillState('synced');
+  showDashboard();
 
   if(pendingIsNewSignup){
     // brand-new account — ALWAYS start from a clean slate, regardless of
@@ -1112,6 +1167,7 @@ document.getElementById('btnAuthSubmit').addEventListener('click', async ()=>{
 });
 document.getElementById('btnSkipAuth').addEventListener('click', ()=>{
   document.getElementById('authOverlay').style.display = 'none';
+  showDashboard();
 });
 document.getElementById('btnAccountMenu').addEventListener('click', ()=>{
   if(confirm('Gusto mo bang mag-logout?\n\nPara sa privacy (lalo na kung shared na computer ito), aalisin din ang naka-save na data sa browser na ito.')){
@@ -1163,6 +1219,7 @@ const titles = {
   sf10: ['SF10 — Permanent Record', 'Waiting for official DepEd release'],
   attendance: ['Attendance', 'Monthly attendance log per learner'],
   awards: ['Awards', 'Honor ranking and certificate of merit'],
+  archives: ['Archived School Years', 'Read-only records from past school years'],
 };
 
 document.querySelectorAll('.nav-btn').forEach(btn=>{
@@ -1181,6 +1238,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     if(v === 'report'){ renderReportView(); }
     if(v === 'attendance'){ renderAttendanceView(); }
     if(v === 'awards'){ renderAwardsView(); }
+    if(v === 'archives'){ renderArchivesList(); }
     if(v === 'sf2'){ renderSF2View(); }
     if(v === 'sf9'){ renderSF9View(); }
   });
@@ -1206,8 +1264,87 @@ function fillSetupForm(){
     if(setupData[key] !== undefined) el.value = setupData[key];
   });
   updateLogoPreview();
+  updateDashboardHeader();
 }
 fillSetupForm();
+
+/* =========================================================
+   FULL-PAGE DASHBOARD / MENU
+   Shown right after login/skip, before the sidebar app shell.
+   Clicking a tile "minimizes" it into the normal sidebar view.
+   ========================================================= */
+const DASH_GROUPS = [
+  { label: 'Foundation', tiles: [
+    { view:'setup', icon:'&#9881;', title:'Setup', desc:'School, class, and roster information' },
+    { view:'masterlist', icon:'&#128203;', title:'Masterlist', desc:'Input data sheet for students' },
+  ]},
+  { label: 'Academics', tiles: [
+    { view:'grades', icon:'&#128221;', title:'Grade Input', desc:'Encode the Term or Quarter grade per subject' },
+    { view:'summary', icon:'&#128202;', title:'Summary', desc:'Consolidated grades and GWA per period' },
+    { view:'report', icon:'&#128100;', title:"Learner's Report", desc:'Generate a consolidated record per learner' },
+  ]},
+  { label: 'DepEd Forms', tiles: [
+    { view:'sf2', icon:'&#128203;', title:'SF2', desc:'Daily Attendance Report of Learners' },
+    { view:'sf9', icon:'&#128196;', title:'SF9', desc:"Learner's Performance Report" },
+    { view:'sf10', icon:'&#128193;', title:'SF10', desc:'Permanent Record', disabled:true, tag:'Phase 3' },
+  ]},
+  { label: 'Attendance & Awards', tiles: [
+    { view:'attendance', icon:'&#128197;', title:'Attendance', desc:'Monthly attendance log per learner' },
+    { view:'awards', icon:'&#127942;', title:'Awards', desc:'Honor ranking and certificate of merit' },
+  ]},
+  { label: 'History', tiles: [
+    { view:'archives', icon:'&#128230;', title:'Archived School Years', desc:'Read-only records from past school years' },
+  ]},
+];
+
+function updateDashboardHeader(){
+  const nameEl = document.getElementById('dashSchoolName');
+  const subEl = document.getElementById('dashSchoolSub');
+  const markEl = document.getElementById('dashLogoMark');
+  if(!nameEl) return;
+  const d = setupData;
+  nameEl.textContent = d.schoolName || 'Student Management System';
+  subEl.textContent = d.section ? `${d.track || ''} ${d.track ? '—' : ''} Grade ${d.gradeLevel || ''} ${d.section}`.replace(/\s+/g,' ').trim() : 'Piliin ang gusto mong buksan';
+  if(d.schoolLogo){ markEl.innerHTML = `<img src="${d.schoolLogo}" style="width:100%; height:100%; object-fit:cover;">`; }
+  else { markEl.textContent = 'SF'; }
+}
+
+function renderDashboard(){
+  const container = document.getElementById('dashGroups');
+  container.innerHTML = DASH_GROUPS.map(group=>`
+    <div class="dash-group">
+      <div class="dash-group-label">${group.label}</div>
+      <div class="dash-grid">
+        ${group.tiles.map(t=>`
+          <button class="dash-tile" data-gotoview="${t.view}" ${t.disabled?'disabled':''}>
+            <div class="dt-icon">${t.icon}</div>
+            <div class="dt-title">${t.title}</div>
+            <div class="dt-desc">${t.desc}</div>
+            ${t.tag ? `<span class="dt-tag">${t.tag}</span>` : ''}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+  container.querySelectorAll('[data-gotoview]:not([disabled])').forEach(btn=>{
+    btn.addEventListener('click', ()=> enterView(btn.dataset.gotoview));
+  });
+}
+
+function showDashboard(){
+  updateDashboardHeader();
+  renderDashboard();
+  document.getElementById('dashboardView').style.display = 'block';
+}
+function hideDashboard(){
+  document.getElementById('dashboardView').style.display = 'none';
+}
+function enterView(viewName){
+  hideDashboard();
+  const navBtn = document.querySelector(`.nav-btn[data-view="${viewName}"]`);
+  if(navBtn && !navBtn.classList.contains('disabled')) navBtn.click();
+}
+document.getElementById('btnGoHome').addEventListener('click', showDashboard);
 
 function updateLogoPreview(){
   const img = document.getElementById('logoPreviewImg');
