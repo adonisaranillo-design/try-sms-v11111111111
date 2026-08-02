@@ -334,7 +334,11 @@
       <div class="field"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
       <div class="field"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters"></div>
     </div>
+    <div style="text-align:right; margin-top:6px;">
+      <a href="#" id="authForgotPassword" style="font-size:11.5px; color:var(--ink-soft); text-decoration:none;">Nakalimutan ang password?</a>
+    </div>
     <div id="authError" style="color:var(--danger); font-size:12px; margin-top:10px; display:none;"></div>
+    <div id="authSuccess" style="color:var(--ok); font-size:12px; margin-top:10px; display:none;"></div>
 
     <button class="btn btn-primary" id="btnAuthSubmit" style="width:100%; justify-content:center; margin-top:16px; padding:10px;">Mag-login</button>
     <div style="margin-top:12px; font-size:12.5px; color:var(--ink-soft);">
@@ -1122,9 +1126,16 @@ if(fbAvailable){
 }
 
 function showAuthError(msg){
+  document.getElementById('authSuccess').style.display = 'none';
   const errEl = document.getElementById('authError');
   errEl.textContent = msg;
   errEl.style.display = 'block';
+}
+function showAuthSuccess(msg){
+  document.getElementById('authError').style.display = 'none';
+  const okEl = document.getElementById('authSuccess');
+  okEl.textContent = msg;
+  okEl.style.display = 'block';
 }
 function authErrorMessage(err){
   const code = err.code || '';
@@ -1133,8 +1144,26 @@ function authErrorMessage(err){
   if(code.includes('email-already-in-use')) return 'May account na gumagamit ng email na ito.';
   if(code.includes('weak-password')) return 'Dapat hindi bababa sa 6 characters ang password.';
   if(code.includes('invalid-email')) return 'Hindi tamang format ng email.';
+  if(code.includes('too-many-requests')) return 'Sobrang dami ng subok. Maghintay muna bago ulitin.';
   return 'May error na naganap. Subukan ulit.';
 }
+document.getElementById('authForgotPassword').addEventListener('click', async (e)=>{
+  e.preventDefault();
+  if(!fbAvailable){ showAuthError('Hindi available ang cloud sync ngayon. Subukan ulit mamaya.'); return; }
+  const email = document.getElementById('authEmail').value.trim();
+  if(!email){ showAuthError('Ilagay muna ang email mo sa field sa itaas, tapos i-click ulit ang "Nakalimutan ang password?".'); return; }
+  const link = document.getElementById('authForgotPassword');
+  const originalText = link.textContent;
+  link.textContent = 'Pinapadala...';
+  try{
+    await fbAuth.sendPasswordResetEmail(email);
+    showAuthSuccess(`Napadalhan na ng password reset link ang ${email}. Tignan ang inbox (o spam folder) mo.`);
+  }catch(err){
+    showAuthError(authErrorMessage(err));
+  }finally{
+    link.textContent = originalText;
+  }
+});
 document.getElementById('authToggleMode').addEventListener('click', (e)=>{
   e.preventDefault();
   authMode = authMode === 'login' ? 'signup' : 'login';
@@ -1142,12 +1171,14 @@ document.getElementById('authToggleMode').addEventListener('click', (e)=>{
   document.getElementById('authToggleLabel').textContent = authMode === 'login' ? 'Wala pang account?' : 'May account ka na?';
   document.getElementById('authToggleMode').textContent = authMode === 'login' ? 'Gumawa ng account' : 'Mag-login na lang';
   document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
 });
 document.getElementById('btnAuthSubmit').addEventListener('click', async ()=>{
   if(!fbAvailable){ showAuthError('Hindi available ang cloud sync ngayon. Subukan ulit mamaya.'); return; }
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
   if(!email || !password){ showAuthError('Punan ang email at password.'); return; }
   const btn = document.getElementById('btnAuthSubmit');
   btn.disabled = true; const originalText = btn.textContent; btn.textContent = 'Please wait...';
