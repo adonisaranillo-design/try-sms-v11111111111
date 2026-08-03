@@ -128,7 +128,7 @@
   .save-pill.saving .dot{ background:#c79a3a; animation:pulse 1s infinite; }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
 
-  .view{ padding: 26px 32px 60px; max-width: 1180px; }
+  .view{ padding: 26px 32px 60px; max-width: 1640px; }
   .view[hidden]{ display:none; }
 
   .card{
@@ -297,23 +297,22 @@
   @media print{
     .sidebar, .topbar, .toolbar, .save-pill, .banner, .empty-state, .no-print{ display:none !important; }
     body{ background:none; }
-    .view{ padding:0; }
+    .view{ padding:0; max-width:none; }
     .view[hidden]{ display:none !important; }
     .card{ box-shadow:none; border:1px solid #ccc; break-inside:avoid; }
     /* When printing a certificate, isolate it — hide every other sibling in the view */
     body.printing-cert #view-awards > *:not(#certCard){ display:none !important; }
     body.printing-cert #certCard{ border:2px solid var(--gold) !important; margin:0 auto !important; }
     body.printing-sf9 #view-sf9 .no-print{ display:none !important; }
-
-    /* Static named pages — more reliably honored across browsers than
-       @page rules injected dynamically at print-time. */
-    @page sms-landscape{ size: 11in 8.5in; margin: 10mm; }
-    @page sms-portrait{ size: 8.5in 11in; margin: 10mm; }
-    #view-sf2, #view-sf2 *{ page: sms-landscape; }
-    body.printing-sf9 #sf9Content, body.printing-sf9 #sf9Content *{ page: sms-landscape; }
-    body.printing-cert #certCard, body.printing-cert #certCard *{ page: sms-landscape; }
-    #view-report, #view-report *{ page: sms-portrait; }
+    /* #sf9Content's width/height/overflow are set inline by JS (fitSf9ToPage)
+       right before printing, computed from the element's actual measured
+       size — more reliable than guessing fixed widths/font-sizes in CSS. */
+    body.printing-sf9-bulk #sf9Content, body.printing-sf9-bulk #sf9EmptyState{ display:none !important; }
+    body.printing-sf9-bulk #sf9BulkPrintArea{ display:block !important; }
+    .sf9-bulk-page{ break-after: page; page-break-after: always; }
+    .sf9-bulk-page:last-child{ break-after: auto; page-break-after: auto; }
   }
+  @page{ size: 8.5in 11in; margin: 0.3in; }
   @media (max-width: 880px){
     .sidebar{ display:none; }
     .grid, .grid.g2{ grid-template-columns: 1fr; }
@@ -397,6 +396,7 @@
 
     <div class="nav-group-label">History</div>
     <button class="nav-btn" data-view="archives"><span class="ic">&#128230;</span> Archived School Years</button>
+    <button class="nav-btn" data-view="versions"><span class="ic">&#8635;</span> Version History</button>
 
     <div class="sidebar-foot">
       Data is saved in this browser only (local storage). Use Export regularly to back up.
@@ -816,7 +816,12 @@
             <span class="ic">&#128269;</span>
             <input id="sf9_search" placeholder="Search learner..." style="width:100%;">
           </div>
-          <div id="sf9_studentList" style="max-height:520px; overflow-y:auto; display:flex; flex-direction:column; gap:3px;"></div>
+          <div id="sf9_studentList" style="max-height:520px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; margin-bottom:12px;"></div>
+          <div style="border-top:1px solid var(--line); padding-top:12px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);">Buong Klase (<span id="sf9AllCount">0</span> learners)</div>
+            <button class="btn btn-primary btn-sm no-print" id="btnPrintAllSF9" style="justify-content:center;">&#128424; Print All Learners</button>
+            <button class="btn btn-gold btn-sm no-print" id="btnDownloadAllSF9" style="justify-content:center;">&#128230; Download All (ZIP)</button>
+          </div>
         </div>
 
         <!-- RIGHT: generated form -->
@@ -825,13 +830,14 @@
             <div class="em">&#128100;</div>
             <div>Pumili ng mag-aaral sa kaliwa para makita ang Performance Report.</div>
           </div>
-          <div id="sf9Content" hidden></div>
+          <div id="sf9Content" hidden style="overflow-x:auto;"></div>
           <div class="toolbar no-print" id="sf9PrintToolbar" hidden>
             <button class="btn btn-gold btn-sm" id="btnDownloadSF9Excel">&#128190; Download SF9 (.xlsx)</button>
             <button class="btn btn-primary btn-sm" id="btnPrintSF9">&#128424; Print Performance Report</button>
           </div>
         </div>
       </div>
+      <div id="sf9BulkPrintArea" style="display:none;"></div>
     </div>
     <div class="view" id="view-sf10" hidden><div class="placeholder-view"><div class="em">&#128193;</div><h2>SF10 — Permanent Record</h2><p>Buong academic record ng mag-aaral, kasama ang eligibility at general average.</p><div class="phase-tag">Coming in Phase 3</div></div></div>
     <!-- ========== ATTENDANCE VIEW ========== -->
@@ -950,6 +956,19 @@
       </div>
     </div>
 
+    <!-- ========== VERSION HISTORY VIEW ========== -->
+    <div class="view" id="view-versions" hidden>
+      <div class="banner"><span class="em">&#8635;</span><div>Local-only ito sa device/browser na ito (hindi naka-sync sa cloud) — parang "undo history" para sa mga aksidenteng pagbabago. May automatic na snapshot kada araw, at pwede kang gumawa ng sarili mong checkpoint bago ka gumawa ng malaking pagbabago.</div></div>
+      <div class="toolbar">
+        <button class="btn btn-gold" id="btnSaveCheckpoint">&#128190; Gumawa ng Checkpoint Ngayon</button>
+      </div>
+      <div class="card">
+        <h2><span class="num">V</span> Mga Naka-save na Version</h2>
+        <p class="desc">"Ibalik" para gawing active ulit ang isang version (awtomatiko munang naka-save ang kasalukuyang estado bago mag-switch).</p>
+        <div id="versionsList"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -962,6 +981,7 @@
    ========================================================= */
 const STORE_KEYS = { setup: 'sms_setup_v1', students: 'sms_students_v1' };
 const ARCHIVE_STORE_KEY = 'sms_archives_v1';
+const VERSIONS_STORE_KEY = 'sms_versions_v1';
 
 function loadSetup(){
   try{ return JSON.parse(localStorage.getItem(STORE_KEYS.setup)) || {}; }catch(e){ return {}; }
@@ -980,6 +1000,39 @@ let setupData = loadSetup();
 let students = loadStudents();
 let archivesData = loadJSON(ARCHIVE_STORE_KEY, {}); // { "2026-2027": {setup,students,subjects,grades,attendance,attMonth,archivedAt} }
 function saveArchives(){ saveJSON(ARCHIVE_STORE_KEY, archivesData); }
+
+/* Local-only version history — a lighter safety net than Archives, meant
+   for "oops, undo that edit" rather than year-to-year transitions. Kept
+   local (not synced to Firestore) so it never risks bloating the cloud
+   document; pair this with the auto-backup-before-cloud-overwrite safety
+   net for cross-device protection. */
+let versionsData = loadJSON(VERSIONS_STORE_KEY, {}); // { versionId: {type:'auto'|'manual', label, createdAt, snapshot} }
+const VERSIONS_MAX_AUTO = 14;
+const VERSIONS_MAX_MANUAL = 20;
+function saveVersions(){ saveJSON(VERSIONS_STORE_KEY, versionsData); }
+
+function createVersion(type, label){
+  const id = `${type}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+  versionsData[id] = {
+    type, label: label || (type === 'auto' ? `Auto — ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}` : label),
+    createdAt: new Date().toISOString(),
+    snapshot: { setup: setupData, students, subjects: subjectsByCtx, grades: gradesByCtx, attendance, attMonth }
+  };
+  pruneVersions(type);
+  saveVersions();
+  return id;
+}
+function pruneVersions(type){
+  const max = type === 'auto' ? VERSIONS_MAX_AUTO : VERSIONS_MAX_MANUAL;
+  const ids = Object.keys(versionsData).filter(id=>versionsData[id].type===type)
+    .sort((a,b)=> new Date(versionsData[a].createdAt) - new Date(versionsData[b].createdAt));
+  while(ids.length > max){ delete versionsData[ids.shift()]; }
+}
+function maybeCreateDailyVersion(){
+  const todayKey = new Date().toISOString().slice(0,10);
+  const hasToday = Object.values(versionsData).some(v => v.type==='auto' && v.createdAt.slice(0,10)===todayKey);
+  if(!hasToday && hasLocalMeaningfulData()) createVersion('auto');
+}
 
 function uid(){ return 'st_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -1085,6 +1138,20 @@ function blankState(){
   };
 }
 
+function hasLocalMeaningfulData(){
+  const hasStudents = Array.isArray(students) && students.length > 0;
+  const hasAttendance = attendance && Object.keys(attendance).length > 0;
+  const hasGrades = gradesByCtx && Object.keys(gradesByCtx).length > 0;
+  return hasStudents || hasAttendance || hasGrades;
+}
+function autoBackupLocalBeforeOverwrite(){
+  try{
+    const payload = collectFullState();
+    downloadFile(`sms_AUTO_BACKUP_before_sync_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.json`, JSON.stringify(payload, null, 2), 'application/json');
+    return true;
+  }catch(err){ console.error(err); return false; }
+}
+
 async function handleSuccessfulLogin(user){
   currentUser = user;
   document.getElementById('authOverlay').style.display = 'none';
@@ -1108,7 +1175,17 @@ async function handleSuccessfulLogin(user){
   try{
     const doc = await fbDb.collection('users').doc(user.uid).get();
     if(doc.exists){
+      // SAFETY NET: if this device/browser already has local data that
+      // hasn't been synced yet, back it up automatically BEFORE it gets
+      // overwritten by whatever the cloud has. Silent and automatic —
+      // no decision required in the moment, which is exactly where this
+      // used to go wrong.
+      if(hasLocalMeaningfulData()){
+        const backedUp = autoBackupLocalBeforeOverwrite();
+        if(backedUp) showToast('May na-detect na hindi pa naka-sync na local data — awtomatikong na-download ang backup nito bago i-apply ang cloud data.');
+      }
       applyFullState(doc.data());
+      maybeCreateDailyVersion();
     } else {
       // existing account somehow has no cloud doc yet — default to blank
       // rather than silently uploading whatever is sitting in local storage
@@ -1251,6 +1328,7 @@ const titles = {
   attendance: ['Attendance', 'Monthly attendance log per learner'],
   awards: ['Awards', 'Honor ranking and certificate of merit'],
   archives: ['Archived School Years', 'Read-only records from past school years'],
+  versions: ['Version History', 'Daily snapshots and manual checkpoints for this device'],
 };
 
 document.querySelectorAll('.nav-btn').forEach(btn=>{
@@ -1270,6 +1348,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     if(v === 'attendance'){ renderAttendanceView(); }
     if(v === 'awards'){ renderAwardsView(); }
     if(v === 'archives'){ renderArchivesList(); }
+    if(v === 'versions'){ renderVersionsList(); }
     if(v === 'sf2'){ renderSF2View(); }
     if(v === 'sf9'){ renderSF9View(); }
   });
@@ -1677,6 +1756,7 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
     try{
       const payload = JSON.parse(evt.target.result);
       if(!confirm('Papalitan nito ang kasalukuyang data sa browser na ito. Magpatuloy?')) return;
+      if(hasLocalMeaningfulData()) autoBackupLocalBeforeOverwrite();
       applyFullState(payload);
       if(currentUser) queueCloudSync();
       showToast('Successfully na-import ang backup.');
@@ -1820,6 +1900,94 @@ function restoreArchive(label){
   flashSaved();
   showToast(`Na-restore ang "${label}" bilang active workspace.`);
 }
+
+function renderVersionsList(){
+  const box = document.getElementById('versionsList');
+  if(!box) return;
+  const ids = Object.keys(versionsData).sort((a,b)=> new Date(versionsData[b].createdAt) - new Date(versionsData[a].createdAt));
+  if(ids.length === 0){
+    box.innerHTML = `<div style="font-size:11.5px; color:var(--ink-soft); padding:8px 0;">Wala pang naka-save na version. Gagawa ng unang automatic snapshot sa susunod mong pagbukas ng system.</div>`;
+    return;
+  }
+  box.innerHTML = ids.map(id=>{
+    const v = versionsData[id];
+    const count = (v.snapshot.students || []).length;
+    const badge = v.type === 'auto'
+      ? `<span class="idchip male" style="font-size:9px;">AUTO</span>`
+      : `<span class="idchip female" style="font-size:9px;">MANUAL</span>`;
+    return `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:7px; margin-bottom:6px;">
+        <div>
+          <div style="font-size:12.5px; font-weight:600; color:var(--navy-deep);">${badge} ${escapeHtml(v.label)}</div>
+          <div style="font-size:10.5px; color:var(--ink-soft);">${count} learners &middot; ${new Date(v.createdAt).toLocaleString()}</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-ghost btn-sm" data-verrestore="${id}">&#8635; Ibalik</button>
+          <button class="btn btn-danger-ghost btn-sm" data-verdelete="${id}">&#128465;</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  box.querySelectorAll('[data-verrestore]').forEach(btn=>{
+    btn.addEventListener('click', ()=> restoreVersion(btn.dataset.verrestore));
+  });
+  box.querySelectorAll('[data-verdelete]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.verdelete;
+      if(!confirm(`Tanggalin ang version na "${versionsData[id]?.label}"? Hindi na ito mababawi.`)) return;
+      delete versionsData[id];
+      saveVersions();
+      renderVersionsList();
+      showToast('Tinanggal ang version.');
+    });
+  });
+}
+
+function restoreVersion(id){
+  const v = versionsData[id];
+  if(!v) return;
+  if(!confirm(`Ibabalik ang "${v.label}" bilang ACTIVE na workspace. Ang kasalukuyang estado ay awtomatiko munang ise-save bilang bagong checkpoint bago mag-switch. Magpatuloy?`)) return;
+
+  // checkpoint whatever is currently active first, so nothing is lost
+  createVersion('manual', `Bago ibalik ang "${v.label}" (${new Date().toLocaleString()})`);
+
+  const snap = v.snapshot;
+  setupData = snap.setup || {};
+  students = snap.students || [];
+  subjectsByCtx = snap.subjects || {};
+  gradesByCtx = snap.grades || {};
+  attendance = snap.attendance || {};
+  attMonth = snap.attMonth || 'JUNE';
+
+  saveSetup(setupData); saveStudents(students);
+  saveJSON(GSTORE_KEYS.subjects, subjectsByCtx);
+  saveJSON(GSTORE_KEYS.grades, gradesByCtx);
+  saveJSON(ATT_STORE_KEY, attendance);
+  saveJSON('sms_att_month_v1', attMonth);
+  if(currentUser) queueCloudSync();
+
+  fillSetupForm();
+  updateLogoPreview();
+  renderLetterhead();
+  renderMasterlist();
+  syncGradeLevelSemesterUI();
+  renderGradesView();
+  renderSummaryView();
+  const attSel = document.getElementById('att_month');
+  if(attSel) attSel.value = attMonth;
+  renderAttendanceView();
+  renderVersionsList();
+  flashSaved();
+  showToast(`Na-restore ang "${v.label}".`);
+}
+
+document.getElementById('btnSaveCheckpoint').addEventListener('click', ()=>{
+  const label = prompt('Pangalan para sa checkpoint na ito (hal. "Bago mag-bulk import"):', `Checkpoint — ${new Date().toLocaleString()}`);
+  if(label === null) return;
+  createVersion('manual', label || undefined);
+  renderVersionsList();
+  showToast('Nasave ang checkpoint.');
+});
 
 document.getElementById('btnResetAllData').addEventListener('click', ()=>{
   const typed = prompt('Buburahin ANG LAHAT ng data ng account na ito (Setup, Masterlist, Grades, Attendance, Logo) — kasama ang cloud data kung naka-login. Hindi na ito mababawi.\n\nI-type ang RESET para kumpirmahin:');
@@ -2559,17 +2727,17 @@ renderGradesLetterhead();
 
 /* Per-document print orientation: sets a temporary @page rule right
    before printing, since @page can't be scoped by a body class. */
-function printWithOrientation(orientation){
+function printWithOrientation(orientation, customSize){
   let styleEl = document.getElementById('printOrientationStyle');
   if(!styleEl){
     styleEl = document.createElement('style');
     styleEl.id = 'printOrientationStyle';
     document.head.appendChild(styleEl);
   }
-  // Explicit Letter-size dimensions (8.5in x 11in) — the bare "landscape"
-  // keyword alone isn't reliably honored by every browser's print preview.
-  const size = orientation === 'landscape' ? '11in 8.5in' : '8.5in 11in';
-  styleEl.textContent = `@page { size: ${size}; margin: 10mm; }`;
+  // Explicit dimensions — the bare "landscape" keyword alone isn't reliably
+  // honored by every browser's print preview.
+  const size = customSize || (orientation === 'landscape' ? '11in 8.5in' : '8.5in 11in');
+  styleEl.textContent = `@page { size: ${size}; margin: 0.3in; }`;
   // give the browser a tick to apply the injected stylesheet before printing
   requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
 }
@@ -3661,17 +3829,9 @@ function sf9Remarks(grade){
   return grade >= 75 ? 'Passed' : 'Failed';
 }
 
-function renderSF9View(){
-  const gradeLevel = document.getElementById('sf9_gradeLevel').value;
-  renderSF9StudentList();
-
-  const s = students.find(x=>x.id===sf9SelectedStudentId);
-  const hasSelection = !!s;
-  document.getElementById('sf9EmptyState').hidden = hasSelection;
-  document.getElementById('sf9Content').hidden = !hasSelection;
-  document.getElementById('sf9PrintToolbar').hidden = !hasSelection;
-  if(!hasSelection) return;
-
+function buildSf9CardHtml(studentId, gradeLevel, scalerId){
+  const s = students.find(x=>x.id===studentId);
+  if(!s) return '';
   const d = setupData;
   const fullName = `${s.lastName || ''}, ${s.firstName || ''} ${s.middleName || ''}`.trim();
 
@@ -3699,7 +3859,7 @@ function renderSF9View(){
   const generalAve = allFinals.length ? Math.round(allFinals.reduce((a,b)=>a+b,0)/allFinals.length) : null;
 
   const learningTableHtml = `
-    <table style="width:100%; font-size:11px; border-collapse:collapse;" border="1">
+    <table style="width:100%; table-layout:fixed; font-size:11px; border-collapse:collapse;" border="1">
       <thead>
         <tr>
           <th rowspan="2" style="text-align:left; padding:5px;">Subjects</th>
@@ -3729,17 +3889,17 @@ function renderSF9View(){
     totalClass += days.length; totalPresent += t.present; totalAbsent += t.absent;
   });
   const attTableHtml = `
-    <table style="width:100%; font-size:9.5px; border-collapse:collapse; text-align:center;" border="1">
-      <thead><tr><th style="text-align:left; padding:4px;">Month</th>${MONTHS_ORDER.map(m=>`<th>${m.slice(0,3)}</th>`).join('')}<th>Total</th></tr></thead>
+    <table style="width:100%; table-layout:fixed; font-size:9.5px; border-collapse:collapse; text-align:center;" border="1">
+      <thead><tr><th style="text-align:left; padding:4px; width:15%;">Month</th>${MONTHS_ORDER.map(m=>`<th>${m.slice(0,3)}</th>`).join('')}<th>Total</th></tr></thead>
       <tbody>
-        <tr><td style="text-align:left;">No. of Class Days</td>${classDays.map(v=>`<td>${v}</td>`).join('')}<td style="font-weight:700;">${totalClass}</td></tr>
-        <tr><td style="text-align:left;">No. of Days Present</td>${presentDays.map(v=>`<td>${v}</td>`).join('')}<td style="font-weight:700;">${totalPresent}</td></tr>
-        <tr><td style="text-align:left;">No. of Days Absent</td>${absentDays.map(v=>`<td>${v}</td>`).join('')}<td style="font-weight:700;">${totalAbsent}</td></tr>
+        <tr><td style="text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">No. of Class Days</td>${classDays.map(v=>`<td>${v}</td>`).join('')}<td style="font-weight:700;">${totalClass}</td></tr>
+        <tr><td style="text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">No. of Days Present</td>${presentDays.map(v=>`<td>${v}</td>`).join('')}<td style="font-weight:700;">${totalPresent}</td></tr>
+        <tr><td style="text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">No. of Days Absent</td>${absentDays.map(v=>`<td>${v}</td>`).join('')}<td style="font-weight:700;">${totalAbsent}</td></tr>
       </tbody>
     </table>`;
 
-  document.getElementById('sf9Content').innerHTML = `
-    <div style="display:flex; gap:24px; background:#fff; padding:26px; border:1px solid var(--line); border-radius:10px;">
+  return `
+    <div id="${scalerId}" class="sf9-scaler" style="display:flex; gap:24px; background:#fff; padding:26px; border:1px solid var(--line); border-radius:10px; transform-origin: top left;">
       <!-- LEFT COLUMN -->
       <div style="flex:1.15; min-width:0; font-size:12px;">
         <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px;">
@@ -3817,6 +3977,21 @@ function renderSF9View(){
       </div>
     </div>
   `;
+}
+
+function renderSF9View(){
+  const gradeLevel = document.getElementById('sf9_gradeLevel').value;
+  renderSF9StudentList();
+  document.getElementById('sf9AllCount').textContent = students.length;
+
+  const s = students.find(x=>x.id===sf9SelectedStudentId);
+  const hasSelection = !!s;
+  document.getElementById('sf9EmptyState').hidden = hasSelection;
+  document.getElementById('sf9Content').hidden = !hasSelection;
+  document.getElementById('sf9PrintToolbar').hidden = !hasSelection;
+  if(!hasSelection) return;
+
+  document.getElementById('sf9Content').innerHTML = buildSf9CardHtml(s.id, gradeLevel, 'sf9Scaler');
 }
 
 /* =========================================================
@@ -3942,16 +4117,124 @@ document.getElementById('btnDownloadSF9Excel').addEventListener('click', async (
   }
 });
 
+function fitElementToPage(outer, scaler){
+  outer.style.width = '';
+  outer.style.height = '';
+  outer.style.overflow = '';
+  scaler.style.transform = 'none';
+  scaler.style.width = '1520px';
+
+  const rect = scaler.getBoundingClientRect();
+  const naturalW = rect.width;
+  const naturalH = rect.height;
+
+  // usable area at 0.3in margins on standard 11in x 8.5in landscape Letter, 96 CSS px/in
+  const targetW = (11 - 0.6) * 96;
+  const targetH = (8.5 - 0.6) * 96;
+
+  const scale = Math.min(targetW / naturalW, targetH / naturalH, 1);
+
+  outer.style.width = (naturalW * scale) + 'px';
+  outer.style.height = (naturalH * scale) + 'px';
+  outer.style.overflow = 'hidden';
+  scaler.style.transform = `scale(${scale})`;
+}
+function fitSf9ToPage(){
+  const outer = document.getElementById('sf9Content');
+  const scaler = document.getElementById('sf9Scaler');
+  if(!outer || !scaler) return;
+  fitElementToPage(outer, scaler);
+}
+function resetSf9Scale(){
+  const outer = document.getElementById('sf9Content');
+  const scaler = document.getElementById('sf9Scaler');
+  if(!outer || !scaler) return;
+  outer.style.width = '';
+  outer.style.height = '';
+  outer.style.overflow = '';
+  scaler.style.transform = 'none';
+  scaler.style.width = '';
+}
+
 document.getElementById('btnPrintSF9').addEventListener('click', ()=>{
   document.body.classList.add('printing-sf9');
+  fitSf9ToPage();
   printWithOrientation('landscape');
 });
 window.addEventListener('afterprint', ()=>{
   document.body.classList.remove('printing-sf9');
+  resetSf9Scale();
+});
+
+/* ---- BULK: Print All Learners (one print job, page-break per student) ---- */
+document.getElementById('btnPrintAllSF9').addEventListener('click', ()=>{
+  if(students.length === 0){ showToast('Wala pang mag-aaral sa Masterlist.', true); return; }
+  const gradeLevel = document.getElementById('sf9_gradeLevel').value;
+  const area = document.getElementById('sf9BulkPrintArea');
+
+  area.innerHTML = students.map((s,i)=>
+    `<div class="sf9-bulk-page"><div id="sf9BulkOuter_${i}">${buildSf9CardHtml(s.id, gradeLevel, `sf9BulkScaler_${i}`)}</div></div>`
+  ).join('');
+
+  document.body.classList.add('printing-sf9-bulk');
+  students.forEach((s,i)=>{
+    const outer = document.getElementById(`sf9BulkOuter_${i}`);
+    const scaler = document.getElementById(`sf9BulkScaler_${i}`);
+    if(outer && scaler) fitElementToPage(outer, scaler);
+  });
+  printWithOrientation('landscape');
+});
+window.addEventListener('afterprint', ()=>{
+  document.body.classList.remove('printing-sf9-bulk');
+  document.getElementById('sf9BulkPrintArea').innerHTML = '';
+});
+
+/* ---- BULK: Download All (ZIP of individual .xlsx files) ---- */
+document.getElementById('btnDownloadAllSF9').addEventListener('click', async ()=>{
+  if(students.length === 0){ showToast('Wala pang mag-aaral sa Masterlist.', true); return; }
+  if(typeof JSZip === 'undefined'){ showToast('Hindi ma-load ang library. Suriin ang internet connection.', true); return; }
+  const gradeLevel = document.getElementById('sf9_gradeLevel').value;
+  const btn = document.getElementById('btnDownloadAllSF9');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+
+  const masterZip = new JSZip();
+  let count = 0;
+  for(let i=0; i<students.length; i++){
+    const s = students[i];
+    btn.textContent = `Ginagawa... (${i+1}/${students.length})`;
+    try{
+      const zip = await buildSF9Xml(s.id, gradeLevel);
+      if(zip){
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const fname = `SF9_${(s.lastName||'learner').replace(/\s+/g,'')}_${(s.firstName||'').replace(/\s+/g,'')}.xlsx`;
+        masterZip.file(fname, blob);
+        count++;
+      }
+    }catch(err){ console.error('SF9 bulk export failed for', s.id, err); }
+  }
+
+  btn.textContent = 'Ini-zip...';
+  try{
+    const masterBlob = await masterZip.generateAsync({ type: 'blob' });
+    const fname = `SF9_AllLearners_${(setupData.section||'section').replace(/\s+/g,'')}.zip`;
+    const url = URL.createObjectURL(masterBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showToast(`Na-download ang ${count} SF9 files sa isang ZIP.`);
+  }catch(err){
+    console.error(err);
+    showToast('May error sa paggawa ng ZIP file.', true);
+  }finally{
+    btn.disabled = false; btn.textContent = originalText;
+  }
 });
 
 /* Initial render */
 renderMasterlist();
+maybeCreateDailyVersion();
 </script>
 </body>
 </html>
