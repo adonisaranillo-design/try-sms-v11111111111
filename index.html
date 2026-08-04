@@ -311,8 +311,10 @@
     body.printing-sf9-bulk #sf9BulkPrintArea{ display:block !important; }
     .sf9-bulk-page{ break-after: page; page-break-after: always; }
     .sf9-bulk-page:last-child{ break-after: auto; page-break-after: auto; }
+    /* No visible page border/frame when printing the SF9 report */
+    .sf9-scaler{ border:none !important; border-radius:0 !important; }
   }
-  @page{ size: 8.5in 11in; margin: 0.3in; }
+  @page{ size: 8.5in 11in; margin: 0.5in; }
   @media (max-width: 880px){
     .sidebar{ display:none; }
     .grid, .grid.g2{ grid-template-columns: 1fr; }
@@ -2737,7 +2739,7 @@ function printWithOrientation(orientation, customSize){
   // Explicit dimensions — the bare "landscape" keyword alone isn't reliably
   // honored by every browser's print preview.
   const size = customSize || (orientation === 'landscape' ? '11in 8.5in' : '8.5in 11in');
-  styleEl.textContent = `@page { size: ${size}; margin: 0.3in; }`;
+  styleEl.textContent = `@page { size: ${size}; margin: 0.5in; }`;
   // give the browser a tick to apply the injected stylesheet before printing
   requestAnimationFrame(()=> requestAnimationFrame(()=> window.print()));
 }
@@ -4128,11 +4130,15 @@ function fitElementToPage(outer, scaler){
   const naturalW = rect.width;
   const naturalH = rect.height;
 
-  // usable area at 0.3in margins on standard 11in x 8.5in landscape Letter, 96 CSS px/in
-  const targetW = (11 - 0.6) * 96;
-  const targetH = (8.5 - 0.6) * 96;
+  // usable area at 0.5in margins on standard 11in x 8.5in landscape Letter, 96 CSS px/in
+  const targetW = (11 - 1) * 96;
+  const targetH = (8.5 - 1) * 96;
 
-  const scale = Math.min(targetW / naturalW, targetH / naturalH, 1);
+  // No upper cap — if the content is naturally smaller than the page, scale
+  // UP (uniformly, so nothing looks stretched/distorted) to actually fill
+  // the paper, instead of leaving it small in a corner. Sanity-capped at 2x
+  // so a near-empty report doesn't blow up into illegibly huge text.
+  const scale = Math.min(targetW / naturalW, targetH / naturalH, 2);
 
   outer.style.width = (naturalW * scale) + 'px';
   outer.style.height = (naturalH * scale) + 'px';
