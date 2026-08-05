@@ -907,7 +907,7 @@
         <button class="btn btn-ghost btn-sm" id="btnExportAwardsCsv">&#11015; Export CSV</button>
       </div>
 
-      <div class="banner"><span class="em">&#127942;</span><div>Awtomatikong ranking base sa GWA ng napiling period. Distinction gamit ang standard DepEd bands: <strong>With Highest Honors</strong> (98-100, walang grade na below 93), <strong>With High Honors</strong> (95-97, walang below 90), <strong>With Honors</strong> (90-94, walang below 85). I-verify pa rin base sa opisyal na criteria ng school n'yo.</div></div>
+      <div class="banner"><span class="em">&#127942;</span><div>Awtomatikong ranking base sa GWA ng napiling period. Distinction gamit ang criteria ng school n'yo: <strong>With Highest Honors</strong> (98-100), <strong>With High Honors</strong> (95-97), <strong>With Honors</strong> (90-94) — walang subject na below 80, kahit anong level.</div></div>
 
       <div class="card" style="padding:0; overflow-x:auto;" id="awardsTableCard" hidden>
         <table id="awardsTable">
@@ -3003,9 +3003,10 @@ function renderAttYearSummary(){
 function honorDistinction(gwa, subjectGrades){
   if(gwa === null) return null;
   const minGrade = subjectGrades.length ? Math.min(...subjectGrades) : 0;
-  if(gwa >= 98 && minGrade >= 93) return 'With Highest Honors';
-  if(gwa >= 95 && minGrade >= 90) return 'With High Honors';
-  if(gwa >= 90 && minGrade >= 85) return 'With Honors';
+  if(minGrade < 80) return null; // school memo: any subject below 80 disqualifies from all honor levels
+  if(gwa >= 98) return 'With Highest Honors';
+  if(gwa >= 95) return 'With High Honors';
+  if(gwa >= 90) return 'With Honors';
   return null;
 }
 
