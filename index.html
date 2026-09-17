@@ -1010,7 +1010,7 @@
           <div style="border-top:1px solid var(--line); padding-top:12px; display:flex; flex-direction:column; gap:6px;">
             <div style="font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);">Buong Klase (<span id="sf9AllCount">0</span> learners)</div>
             <button class="btn btn-primary btn-sm no-print" id="btnPrintAllSF9" style="justify-content:center;">&#128424; Print All Learners</button>
-            <button class="btn btn-gold btn-sm no-print" id="btnDownloadAllSF9" style="justify-content:center;">&#128230; Download All (ZIP)</button>
+            <button class="btn btn-gold btn-sm no-print" id="btnDownloadAllSF9" style="justify-content:center;">&#128230; Download All SF9 (.docx ZIP)</button>
           </div>
         </div>
 
@@ -1045,7 +1045,7 @@
           <select id="att_month"></select>
         </div>
         <div class="spacer"></div>
-        <span style="font-size:11.5px; color:var(--ink-soft);">Click a date sa column header para markahan bilang <strong>No Class</strong>. Click ang cell ng estudyante para i-cycle: <strong style="color:var(--ok);">Present</strong> → <strong style="color:var(--danger);">Absent</strong> → <strong style="color:#a3690a;">Late</strong> → <strong style="color:var(--male);">Modular/Distance</strong>. 3 Late = 1 Absent (auto-compute).</span>
+        <span style="font-size:11.5px; color:var(--ink-soft);">Click a date sa column header para markahan bilang <strong>No Class</strong>. Click ang cell ng estudyante para i-cycle: <strong style="color:var(--ok);">Present</strong> → <strong style="color:var(--danger);">Absent</strong> → <strong style="color:#a3690a;">Late</strong> → <strong style="color:var(--male);">Modular/Distance</strong>. 3 Late = 1 Absent (auto-compute) &mdash; ang ikatlong late ay may <strong>*</strong> at pulang border, at 'yun ang lalagyan ng <strong>x</strong> sa SF2.</span>
       </div>
 
       <div class="stat-row" id="attStatRow"></div>
@@ -3114,6 +3114,38 @@ function studentMonthTotals(studentId, month){
   return { totalDays, absent, rawAbsent, late, lateAsAbsent, modular, present };
 }
 
+/* Every 3rd late in a month converts to one absence. This returns the exact
+   days where that conversion lands — the 3rd, 6th, 9th late — so the SF2 can
+   put an "x" on those days too. Without this the X marks on the form count
+   fewer than the ABSENT column, which is the mismatch teachers spot first. */
+function lateConvertedDays(studentId, month){
+  const data = getMonthData(month);
+  const days = weekdaysInMonth(month)
+    .filter(d => !data.holidays.includes(d.day))
+    .sort((a,b)=> a.day - b.day);
+  const out = new Set();
+  let n = 0;
+  days.forEach(d=>{
+    const mark = data.marks[studentId] && data.marks[studentId][d.day];
+    if(mark === 'L'){
+      n++;
+      if(n % 3 === 0) out.add(d.day);
+    }
+  });
+  return out;
+}
+
+/* A day counts as absent on the SF2 if it was marked absent outright, or if
+   it is the 3rd late that converts into one. */
+function sf2DayAbsent(studentId, month, day, convertedSet){
+  const data = getMonthData(month);
+  if(data.holidays.includes(day)) return false;
+  const mark = data.marks[studentId] && data.marks[studentId][day];
+  if(mark === 'A') return true;
+  const conv = convertedSet || lateConvertedDays(studentId, month);
+  return conv.has(day);
+}
+
 const ATT_MARK_STYLE = {
   'A': { ch:'A', style:'background:#fbeeed; color:var(--danger); font-weight:700;' },
   'L': { ch:'L', style:'background:#fff4de; color:#a3690a; font-weight:700;' },
@@ -3181,6 +3213,7 @@ function renderAttendanceView(){
     list.forEach((s,i)=>{
       const fullName = `${s.lastName || '(no name)'}, ${s.firstName || ''} ${s.middleName ? s.middleName[0]+'.' : ''}`.trim();
       const totals = studentMonthTotals(s.id, attMonth);
+      const convertedDays = lateConvertedDays(s.id, attMonth);
       const tr = document.createElement('tr');
       let cells = `<td>${i+1}</td><td>${escapeHtml(fullName)}</td>`;
       cells += gridSlots.map((slot,di)=>{
@@ -3192,9 +3225,15 @@ function renderAttendanceView(){
         const isHoliday = data.holidays.includes(slot.day);
         const mark = data.marks[s.id] && data.marks[s.id][slot.day];
         const info = ATT_MARK_STYLE[mark];
+        const isConverted = convertedDays.has(slot.day);
         const cellStyle = isHoliday ? 'background:#f3f0e6; color:#c9c2ac;' : (info ? info.style : 'color:var(--ok);');
-        const ch = isHoliday ? '—' : (info ? info.ch : 'P');
-        return `<td data-sid="${s.id}" data-day="${slot.day}" title="Click para i-cycle: Present → Absent → Late → Modular" style="text-align:center; cursor:${isHoliday?'default':'pointer'}; ${borderStyle} ${cellStyle}">${ch}</td>`;
+        // the 3rd late becomes an absence — flag it so the teacher can see
+        // which day turns into an "x" on the SF2
+        const ch = isHoliday ? '—' : (info ? (isConverted ? info.ch + '*' : info.ch) : 'P');
+        const tip = isConverted
+          ? 'Ikatlong late — binibilang na absent at may x sa SF2'
+          : 'Click para i-cycle: Present → Absent → Late → Modular';
+        return `<td data-sid="${s.id}" data-day="${slot.day}" title="${tip}" style="text-align:center; cursor:${isHoliday?'default':'pointer'}; ${borderStyle} ${cellStyle}${isConverted ? ' box-shadow: inset 0 0 0 2px var(--danger);' : ''}">${ch}</td>`;
       }).join('');
       cells += `<td style="text-align:center; font-weight:600; color:var(--ok);">${totals.present}</td><td style="text-align:center; font-weight:600; color:var(--danger);">${totals.absent}</td><td style="text-align:center; font-weight:600; color:#a3690a;">${totals.late}</td>`;
       tr.innerHTML = cells;
@@ -3654,7 +3693,7 @@ function buildTempCardHtml(data, scalerId, isFileCopy){
           ${['1','2','3'].map((t,idx)=>`
             <div style="flex:1 1 auto; min-height:20px; ${idx<2 ? 'border-bottom:1px solid #cfc7ae;' : ''} padding:3px 6px; font-size:8px; line-height:1.4; word-wrap:break-word; overflow-wrap:break-word;">
               <span style="font-weight:700; color:#5c6570;">Term ${t}</span>
-              <span style="color:#23282e;"> ${escapeHtml(getComment(s.id, t))}</span>
+              <span style="color:#23282e; font-family:'Bookman Old Style', Georgia, serif; font-size:8pt; font-style:italic;"> ${escapeHtml(getComment(s.id, t))}</span>
             </div>`).join('')}
         </div>
       </div>
@@ -3860,6 +3899,7 @@ function generateTeacherComment(studentId, term){
     ]));
   }
 
+  const subjStart = parts.length;
   /* ---- 2) subject detail, keyed to how uneven the marks actually are ---- */
   if(spread <= 3){
     parts.push(pickOne([
@@ -3888,6 +3928,7 @@ function generateTeacherComment(studentId, term){
     }
   }
 
+  const subjEnd = parts.length;
   /* ---- 3) attendance — computed ONLY from this term's months, with
            bands fine enough that rare lateness isn't scolded ---- */
   let tAbsent = 0, tLate = 0, tDays = 0;
@@ -3898,43 +3939,56 @@ function generateTeacherComment(studentId, term){
   const absentRate = tDays > 0 ? (tAbsent / tDays) * 100 : 0;
 
   if(tDays > 0){
+    /* Absences are weighted ahead of lateness: missing whole days costs far
+       more learning than arriving late, and five or more in a single term is
+       the point where it has to be named plainly. Lateness is still raised,
+       but as an add-on rather than in place of the absence note. */
+    let absentNote = '';
+    if(tAbsent >= 8){
+      absentNote = pickOne([
+        `Umabot sa ${tAbsent} araw ang kanyang liban ngayong termino — ito ang pinakamalaking hadlang sa kanyang pagkatuto at kailangang matugunan agad.`,
+        `Napakarami ng liban (${tAbsent} araw) ngayong termino; mahalagang mapag-usapan ito ng paaralan at ng pamilya.`
+      ]);
+    } else if(tAbsent >= 5){
+      absentNote = pickOne([
+        `May ${tAbsent} araw siyang liban ngayong termino — mahalagang mabawasan ito upang hindi na malampasan pa ang mga aralin.`,
+        `Umabot sa ${tAbsent} ang kanyang liban ngayong termino; kailangan na itong bigyang-pansin.`
+      ]);
+    } else if(tAbsent >= 3 || absentRate > 8){
+      absentNote = pickOne([
+        `May ${tAbsent} araw na liban ngayong termino na mainam na maiwasan sa susunod.`,
+        `Makatutulong ang mas regular na pagpasok upang hindi mahuli sa mga aralin.`
+      ]);
+    }
+
+    let lateNote = '';
+    if(tLate >= 6){
+      lateNote = pickOne([
+        `Madalas din ang pagka-huli (${tLate} beses) ngayong termino.`,
+        `Kapansin-pansin din ang ${tLate} beses na pagka-huli.`
+      ]);
+    } else if(tLate >= 3){
+      lateNote = pickOne([
+        `May ilang pagka-huli rin na kayang maiwasan sa kaunting pag-aayos ng oras.`,
+        `Kung mababawasan ang pagka-huli, mas masusundan niya ang simula ng aralin.`
+      ]);
+    }
+
     if(tAbsent === 0 && tLate === 0){
       parts.push(pickOne([
         `Perpekto rin ang kanyang pagpasok ngayong termino.`,
         `Wala siyang liban ni pagka-huli sa buong termino — kapuri-puri.`,
         `Buong-buo ang kanyang pagdalo sa klase ngayong termino.`
       ]));
+    } else if(absentNote || lateNote){
+      if(absentNote) parts.push(absentNote);
+      if(lateNote) parts.push(lateNote);
     } else if(tAbsent === 0 && tLate <= 2){
       parts.push(pickOne([
         `Halos hindi siya lumiliban, at bihira lang ang pagka-huli.`,
         `Maaasahan ang kanyang pagpasok; iilang beses lang siyang na-late.`
       ]));
-    } else if(absentRate <= 3 && tLate <= 2){
-      parts.push(pickOne([
-        `Maayos ang kanyang talaan ng pagpasok ngayong termino.`,
-        `Regular naman ang kanyang pagdalo sa klase.`
-      ]));
-    } else if(tLate >= 6){
-      parts.push(pickOne([
-        `Madalas ang pagka-huli ngayong termino; malaking tulong kung makakarating siya bago magsimula ang klase.`,
-        `Makatutulong nang malaki kung mababawasan ang ${tLate} beses na pagka-huli sa susunod na termino.`
-      ]));
-    } else if(tLate >= 3){
-      parts.push(pickOne([
-        `May ilang pagka-huli ngayong termino na kayang maiwasan sa kaunting pag-aayos ng oras.`,
-        `Kung mababawasan ang pagka-huli, mas masusundan niya ang simula ng aralin.`
-      ]));
-    } else if(absentRate > 10){
-      parts.push(pickOne([
-        `Marami-rami ang naging liban ngayong termino; mahalagang matugunan ito upang hindi malampasan ang aralin.`,
-        `Ang dalas ng pagliban ang pinakamalaking hadlang sa kanyang pag-unlad ngayong termino.`
-      ]));
-    } else if(absentRate > 5){
-      parts.push(pickOne([
-        `Makatutulong ang mas regular na pagpasok upang hindi mahuli sa mga aralin.`,
-        `May ilang liban ngayong termino na mainam na maiwasan sa susunod.`
-      ]));
-    } else if(tAbsent > 0){
+    } else {
       parts.push(pickOne([
         `Kakaunti lang ang kanyang liban ngayong termino.`,
         `Sa kabuuan ay maayos ang kanyang pagdalo sa klase.`
@@ -3942,6 +3996,7 @@ function generateTeacherComment(studentId, term){
     }
   }
 
+  const closeStart = parts.length;
   /* ---- 4) closing, matched to the overall picture ---- */
   if(gwa >= 90){
     parts.push(pickOne([
@@ -3961,7 +4016,21 @@ function generateTeacherComment(studentId, term){
     ]));
   }
 
-  return parts.join(' ').replace(/\s+/g,' ').trim();
+  /* Keep the remark inside the 280-character budget the form's comment box
+     can hold. Trim by value, not by cutting mid-sentence: the closing
+     pleasantry goes first, then the subject notes. The performance opening
+     and the attendance note are never dropped — those carry the substance. */
+  const assemble = list => list.join(' ').replace(/\s+/g,' ').trim();
+  let keep = parts.slice();
+  if(assemble(keep).length > COMMENT_SOFT_LIMIT && keep.length > closeStart){
+    keep = keep.slice(0, closeStart);                       // drop the closing
+  }
+  let subjCount = subjEnd - subjStart;
+  while(assemble(keep).length > COMMENT_SOFT_LIMIT && subjCount > 0){
+    keep.splice(subjStart + subjCount - 1, 1);              // drop a subject note
+    subjCount--;
+  }
+  return assemble(keep);
 }
 
 const COMMENT_SOFT_LIMIT = 280;
@@ -4096,7 +4165,7 @@ function renderSF2View(){
     return days.map(dy=>{
       const isHoliday = monthData.holidays.includes(dy.day);
       if(isHoliday) return '';
-      const presentCount = list.filter(s => !(monthData.marks[s.id] && monthData.marks[s.id][dy.day] === 'A')).length;
+      const presentCount = list.filter(s => !sf2DayAbsent(s.id, attMonth, dy.day)).length;
       return presentCount;
     });
   }
@@ -4104,9 +4173,10 @@ function renderSF2View(){
   function studentRow(s, i){
     const fullName = `${s.lastName || '(no name)'}, ${s.firstName || ''} ${s.middleName ? s.middleName[0]+'.' : ''}`.trim();
     const totals = studentMonthTotals(s.id, attMonth);
+    const converted = lateConvertedDays(s.id, attMonth);
     const dayCells = days.map(dy=>{
       const isHoliday = monthData.holidays.includes(dy.day);
-      const isAbsent = monthData.marks[s.id] && monthData.marks[s.id][dy.day] === 'A';
+      const isAbsent = sf2DayAbsent(s.id, attMonth, dy.day, converted);
       return `<td style="text-align:center; ${isHoliday?'background:#f6f4ee;':''}">${isHoliday?'':(isAbsent?'x':'')}</td>`;
     }).join('');
     const remark = extra.remarks[s.id] || '';
@@ -4323,10 +4393,11 @@ function sf2DateWeekGrid(month){
 function sf2HasFiveConsecutiveAbsences(studentId, month){
   const monthData = getMonthData(month);
   const days = weekdaysInMonth(month).filter(d=>!monthData.holidays.includes(d.day)).sort((a,b)=>a.day-b.day);
+  const converted = lateConvertedDays(studentId, month);
   let streak = 0;
   for(const d of days){
-    const isAbsent = monthData.marks[studentId] && monthData.marks[studentId][d.day] === 'A';
-    if(isAbsent){ streak++; if(streak>=5) return true; } else { streak = 0; }
+    if(sf2DayAbsent(studentId, month, d.day, converted)){ streak++; if(streak>=5) return true; }
+    else { streak = 0; }
   }
   return false;
 }
@@ -4407,6 +4478,7 @@ async function buildSF2Xml(){
       xml = xmlSetCellNumber(xml, 'A' + row, s ? (i+1) : '');
       const fullName = s ? `${s.lastName || ''}, ${s.firstName || ''} ${s.middleName || ''}`.trim().toUpperCase() : '';
       xml = xmlSetCellText(xml, 'B' + row, fullName);
+      const converted = s ? lateConvertedDays(s.id, month) : null;
       for(let w=0; w<5; w++){
         for(let k=1; k<=5; k++){
           const colNum = SF2_FIRST_DAY_COL + w*5 + (k-1);
@@ -4414,10 +4486,7 @@ async function buildSF2Xml(){
           let mark = '';
           if(s){
             const dayVal = weeks[w] ? weeks[w][k] : null;
-            if(dayVal && !monthData.holidays.includes(dayVal)){
-              const isAbsent = monthData.marks[s.id] && monthData.marks[s.id][dayVal] === 'A';
-              mark = isAbsent ? 'x' : '';
-            }
+            if(dayVal && sf2DayAbsent(s.id, month, dayVal, converted)) mark = 'x';
           }
           xml = xmlSetCellText(xml, ref, mark);
         }
@@ -4440,8 +4509,7 @@ async function buildSF2Xml(){
         if(!dayVal){ xml = xmlSetCellNumber(xml, ref, ''); continue; }
         let presentCount = 0;
         list.forEach(s=>{
-          const isAbsent = !monthData.holidays.includes(dayVal) && monthData.marks[s.id] && monthData.marks[s.id][dayVal] === 'A';
-          if(!isAbsent) presentCount++;
+          if(!sf2DayAbsent(s.id, month, dayVal)) presentCount++;
         });
         xml = xmlSetCellNumber(xml, ref, presentCount);
       }
@@ -4466,8 +4534,7 @@ async function buildSF2Xml(){
       if(!dayVal){ xml = xmlSetCellNumber(xml, ref, ''); continue; }
       let presentCount = 0;
       students.forEach(s=>{
-        const isAbsent = !monthData.holidays.includes(dayVal) && monthData.marks[s.id] && monthData.marks[s.id][dayVal] === 'A';
-        if(!isAbsent) presentCount++;
+        if(!sf2DayAbsent(s.id, month, dayVal)) presentCount++;
       });
       xml = xmlSetCellNumber(xml, ref, presentCount);
     }
@@ -4759,7 +4826,7 @@ function buildSf9CardHtml(studentId, gradeLevel, scalerId){
 
           <div style="${H}">TEACHER'S COMMENTS/REMARKS</div>
           <div style="border:${BD}; font-size:9px;">
-            ${['1','2','3'].map((t,i)=>`<div style="${i<2 ? 'border-bottom:'+BD+';' : ''} padding:4px 6px; min-height:34px;"><strong>Term ${t}</strong> <span class="ovl">${escapeHtml(getComment(s.id,t))}</span></div>`).join('')}
+            ${['1','2','3'].map((t,i)=>`<div style="${i<2 ? 'border-bottom:'+BD+';' : ''} padding:4px 6px; min-height:34px;"><strong>Term ${t}</strong> <span class="ovl" style="font-family:'Bookman Old Style', Georgia, serif; font-size:8pt; font-style:italic;">${escapeHtml(getComment(s.id,t))}</span></div>`).join('')}
           </div>
 
           <div style="${H}">PARENT'S/GUARDIAN'S SIGNATURE</div>
@@ -5116,126 +5183,6 @@ async function buildSF9Docx(studentId, gradeLevel){
   return zip;
 }
 
-/* =========================================================
-   SF9 OFFICIAL EXCEL EXPORT
-   No official DepEd Word/Excel file exists yet for this new
-   "Learner's Performance Report" — this is our own Excel build
-   matching the annex layout as closely as possible (embedded
-   below as base64). Same surgical XML-editing approach as SF2:
-   only cell values change, never the layout/borders/formulas.
-   ========================================================= */
-const SF9_TEMPLATE_B64 = "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";
-const SF9_SHEET_PATH = "xl/worksheets/sheet1.xml";
-const SF9_COORDS = {"region": "D3", "district": "I3", "division": "F4", "schoolName": "D5", "schoolId": "K5", "schoolYear": "F7", "studentName": "B9", "age": "I9", "sex": "K9", "lrn": "B10", "gradeLevel": "I10", "section": "K10", "track": "C11", "combined_name": "A21", "combined_t1": "G21", "combined_t2": "H21", "combined_t3": "I21", "combined_final": "J21", "combined_remarks": "L21", "core1_name": "A22", "core1_t1": "G22", "core1_t2": "H22", "core1_t3": "I22", "core1_final": "J22", "core1_remarks": "L22", "core2_name": "A23", "core2_t1": "G23", "core2_t2": "H23", "core2_t3": "I23", "core2_final": "J23", "core2_remarks": "L23", "core3_name": "A24", "core3_t1": "G24", "core3_t2": "H24", "core3_t3": "I24", "core3_final": "J24", "core3_remarks": "L24", "core4_name": "A25", "core4_t1": "G25", "core4_t2": "H25", "core4_t3": "I25", "core4_final": "J25", "core4_remarks": "L25", "core5_name": "A26", "core5_t1": "G26", "core5_t2": "H26", "core5_t3": "I26", "core5_final": "J26", "core5_remarks": "L26", "core6_name": "A27", "core6_t1": "G27", "core6_t2": "H27", "core6_t3": "I27", "core6_final": "J27", "core6_remarks": "L27", "elective1_name": "A29", "elective1_t1": "G29", "elective1_t2": "H29", "elective1_t3": "I29", "elective1_final": "J29", "elective1_remarks": "L29", "elective2_name": "A30", "elective2_t1": "G30", "elective2_t2": "H30", "elective2_t3": "I30", "elective2_final": "J30", "elective2_remarks": "L30", "elective3_name": "A31", "elective3_t1": "G31", "elective3_t2": "H31", "elective3_t3": "I31", "elective3_final": "J31", "elective3_remarks": "L31", "elective4_name": "A32", "elective4_t1": "G32", "elective4_t2": "H32", "elective4_t3": "I32", "elective4_final": "J32", "elective4_remarks": "L32", "generalAve": "J33", "generalAveRemarks": "L33", "att_classDays_JUNE": "P3", "att_classDays_JULY": "Q3", "att_classDays_AUGUST": "R3", "att_classDays_SEPTEMBER": "S3", "att_classDays_OCTOBER": "T3", "att_classDays_NOVEMBER": "U3", "att_classDays_DECEMBER": "V3", "att_classDays_JANUARY": "W3", "att_classDays_FEBRUARY": "X3", "att_classDays_MARCH": "Y3", "att_classDays_APRIL": "Z3", "att_classDays_total": "AA3", "att_present_JUNE": "P4", "att_present_JULY": "Q4", "att_present_AUGUST": "R4", "att_present_SEPTEMBER": "S4", "att_present_OCTOBER": "T4", "att_present_NOVEMBER": "U4", "att_present_DECEMBER": "V4", "att_present_JANUARY": "W4", "att_present_FEBRUARY": "X4", "att_present_MARCH": "Y4", "att_present_APRIL": "Z4", "att_present_total": "AA4", "att_absent_JUNE": "P5", "att_absent_JULY": "Q5", "att_absent_AUGUST": "R5", "att_absent_SEPTEMBER": "S5", "att_absent_OCTOBER": "T5", "att_absent_NOVEMBER": "U5", "att_absent_DECEMBER": "V5", "att_absent_JANUARY": "W5", "att_absent_FEBRUARY": "X5", "att_absent_MARCH": "Y5", "att_absent_APRIL": "Z5", "att_absent_total": "AA5", "comment_term1": "O8", "comment_term2": "O10", "comment_term3": "O12", "adviserSig1": "O27", "schoolHeadSig1": "V27"};
-
-async function buildSF9Xml(studentId, gradeLevel){
-  const s = students.find(x=>x.id===studentId);
-  if(!s) return null;
-  const d = setupData;
-  const zip = await JSZip.loadAsync(SF9_TEMPLATE_B64, { base64: true });
-  let xml = await zip.file(SF9_SHEET_PATH).async('string');
-
-  const C = SF9_COORDS;
-  const fullName = `${s.lastName || ''}, ${s.firstName || ''} ${s.middleName || ''}`.trim().toUpperCase();
-
-  xml = xmlSetCellText(xml, C.region, d.region || '');
-  xml = xmlSetCellText(xml, C.district, d.district || '');
-  xml = xmlSetCellText(xml, C.division, d.division || '');
-  xml = xmlSetCellText(xml, C.schoolName, d.schoolName || '');
-  xml = xmlSetCellText(xml, C.schoolYear, d.schoolYear || '');
-  xml = xmlSetCellText(xml, C.studentName, fullName);
-  xml = xmlSetCellNumber(xml, C.age, calcAge(s.birthdate) || '');
-  xml = xmlSetCellText(xml, C.sex, sexLabel(s.sex));
-  xml = xmlSetCellText(xml, C.lrn, s.lrn || '');
-  xml = xmlSetCellText(xml, C.gradeLevel, gradeLevel || '');
-  xml = xmlSetCellText(xml, C.section, d.section || '');
-  xml = xmlSetCellText(xml, C.track, d.track || '');
-
-  // ---- learning progress: core + elective subjects ----
-  const bySubject = sf9CollectSubjectRows(studentId, gradeLevel);
-  function finalGrade(entry){
-    const vals = ['1','2','3'].map(t=>entry.terms[t]).filter(v=>v!==null);
-    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
-  }
-  const coreNames = NEW_CORE_SUBJECTS.filter(n=>bySubject[n]);
-  const electiveNames = Object.keys(bySubject).filter(n=>bySubject[n].category==='Elective');
-
-  /* Row 1 of the official form is the combined parent
-     "Effective Communication / Mabisang Komunikasyon" (average of the two),
-     followed by those two as indented components, then the rest of the core. */
-  const presentCombined = SF9_COMBINED_CHILDREN.filter(n=>bySubject[n]);
-  if(presentCombined.length){
-    const termAve = t => {
-      const vals = presentCombined.map(n=>bySubject[n].terms[t]).filter(v=>v!==null && v!==undefined);
-      return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
-    };
-    const cT = { '1': termAve('1'), '2': termAve('2'), '3': termAve('3') };
-    const cVals = ['1','2','3'].map(t=>cT[t]).filter(v=>v!==null);
-    const cFinal = cVals.length ? Math.round(cVals.reduce((a,b)=>a+b,0)/cVals.length) : null;
-    xml = xmlSetCellText(xml, C.combined_name, SF9_COMBINED_PARENT);
-    ['1','2','3'].forEach(t=> xml = xmlSetCellNumber(xml, C[`combined_t${t}`], cT[t] ?? ''));
-    xml = xmlSetCellNumber(xml, C.combined_final, cFinal ?? '');
-    xml = xmlSetCellText(xml, C.combined_remarks, sf9Remarks(cFinal));
-  }
-  // core1/core2 are the two components; core3.. are the remaining core subjects
-  const orderedCore = [
-    ...SF9_COMBINED_CHILDREN,
-    ...coreNames.filter(n=>!SF9_COMBINED_CHILDREN.includes(n))
-  ];
-  orderedCore.slice(0,6).forEach((name, i)=>{
-    const entry = bySubject[name];
-    const idx = i+1;
-    if(!C[`core${idx}_name`]) return;
-    if(!entry){ xml = xmlSetCellText(xml, C[`core${idx}_name`], name); return; }
-    const final = finalGrade(entry);
-    xml = xmlSetCellText(xml, C[`core${idx}_name`], name);
-    ['1','2','3'].forEach(t=> xml = xmlSetCellNumber(xml, C[`core${idx}_t${t}`], entry.terms[t] ?? ''));
-    xml = xmlSetCellNumber(xml, C[`core${idx}_final`], final ?? '');
-    xml = xmlSetCellText(xml, C[`core${idx}_remarks`], sf9Remarks(final));
-  });
-  electiveNames.slice(0,4).forEach((name, i)=>{
-    const entry = bySubject[name];
-    const idx = i+1;
-    if(!C[`elective${idx}_name`]) return;
-    const final = finalGrade(entry);
-    xml = xmlSetCellText(xml, C[`elective${idx}_name`], name);
-    ['1','2','3'].forEach(t=> xml = xmlSetCellNumber(xml, C[`elective${idx}_t${t}`], entry.terms[t] ?? ''));
-    xml = xmlSetCellNumber(xml, C[`elective${idx}_final`], final ?? '');
-    xml = xmlSetCellText(xml, C[`elective${idx}_remarks`], sf9Remarks(final));
-  });
-  const allFinals = [...coreNames, ...electiveNames].map(n=>finalGrade(bySubject[n])).filter(v=>v!==null);
-  const generalAve = allFinals.length ? Math.round(allFinals.reduce((a,b)=>a+b,0)/allFinals.length) : null;
-  xml = xmlSetCellNumber(xml, C.generalAve, generalAve ?? '');
-  xml = xmlSetCellText(xml, C.generalAveRemarks, sf9Remarks(generalAve));
-
-  // ---- attendance record (official SF9 grid: June to April) ----
-  let totalClass=0, totalPresent=0, totalAbsent=0;
-  SF9_MONTHS.forEach(m=>{
-    const monthData = getMonthData(m);
-    const days = weekdaysInMonth(m).filter(dd=>!monthData.holidays.includes(dd.day));
-    const t = studentMonthTotals(s.id, m);
-    xml = xmlSetCellNumber(xml, C[`att_classDays_${m}`], days.length);
-    xml = xmlSetCellNumber(xml, C[`att_present_${m}`], t.present);
-    xml = xmlSetCellNumber(xml, C[`att_absent_${m}`], t.absent);
-    totalClass += days.length; totalPresent += t.present; totalAbsent += t.absent;
-  });
-  xml = xmlSetCellNumber(xml, C.att_classDays_total, totalClass);
-  xml = xmlSetCellNumber(xml, C.att_present_total, totalPresent);
-  xml = xmlSetCellNumber(xml, C.att_absent_total, totalAbsent);
-
-  // ---- signatories ----
-  xml = xmlSetCellText(xml, C.schoolHeadSig1, (d.principal || '').toUpperCase());
-  // ---- teacher's comments / remarks per term ----
-  ['1','2','3'].forEach(t=>{
-    xml = xmlSetCellText(xml, C[`comment_term${t}`], `Term ${t}  ${getComment(s.id, t)}`.trim());
-  });
-
-  xml = xmlSetCellText(xml, C.adviserSig1, (d.adviser || '').toUpperCase());
-
-  zip.file(SF9_SHEET_PATH, xml);
-  return zip;
-}
-
 document.getElementById('btnDownloadSF9Excel').addEventListener('click', async ()=>{
   if(!sf9SelectedStudentId){ showToast('Pumili muna ng mag-aaral.', true); return; }
   if(typeof JSZip === 'undefined'){ showToast('Hindi ma-load ang library. Suriin ang internet connection.', true); return; }
@@ -5393,10 +5340,10 @@ document.getElementById('btnDownloadAllSF9').addEventListener('click', async ()=
     const s = students[i];
     btn.textContent = `Ginagawa... (${i+1}/${students.length})`;
     try{
-      const zip = await buildSF9Xml(s.id, gradeLevel);
+      const zip = await buildSF9Docx(s.id, gradeLevel);
       if(zip){
         const blob = await zip.generateAsync({ type: 'blob' });
-        const fname = `SF9_${(s.lastName||'learner').replace(/\s+/g,'')}_${(s.firstName||'').replace(/\s+/g,'')}.xlsx`;
+        const fname = `SF9_${(s.lastName||'learner').replace(/\s+/g,'')}_${(s.firstName||'').replace(/\s+/g,'')}.docx`;
         masterZip.file(fname, blob);
         count++;
       }
