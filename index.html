@@ -510,6 +510,23 @@
   }
   .mb-note{ font-size:11px; color:var(--ink-soft); text-align:center; margin-top:9px; line-height:1.6; }
 
+  
+  /* Lumulutang na paraan pabalik sa mobile preview. Lumalabas lamang
+     kapag maliit ang screen at nasa buong sistema — dahil nakatago
+     ang sidebar doon, wala nang ibang madaraanan pabalik. */
+  #mbFloat{ display:none; }
+  @media (max-width: 880px){
+    body:not(.mobile-mode) #mbFloat{
+      display:flex; align-items:center; gap:7px;
+      position:fixed; z-index:90;
+      right:16px; bottom:calc(16px + env(safe-area-inset-bottom,0px));
+      padding:11px 15px; border:0; border-radius:26px;
+      background:var(--navy); color:#fff;
+      font-family:inherit; font-size:13px; font-weight:600;
+      box-shadow:0 4px 16px rgba(0,0,0,.28); cursor:pointer;
+    }
+  }
+
   @media (max-width: 880px){
     .sidebar{ display:none; }
     .grid, .grid.g2{ grid-template-columns: 1fr; }
@@ -520,6 +537,8 @@
 <body>
 
 
+
+<button id="mbFloat">&#128241; Mobile preview</button>
 
 <!-- ================= MOBILE PREVIEW ================= -->
 <div id="mobileApp">
@@ -7235,19 +7254,35 @@ function openMobileDetail(studentId){
 
   document.body.classList.add('mb-detail-open');
   document.getElementById('mbDetail').scrollTop = 0;
+  // Para sumara ang card sa back button ng telepono imbes na lumabas sa app.
+  try{ history.pushState({ mbDetail: true }, ''); }catch(err){ /* file:// — hayaan */ }
 }
 
-function closeMobileDetail(){
+function closeMobileDetail(fromHistory){
+  if(!document.body.classList.contains('mb-detail-open')) return;
   document.body.classList.remove('mb-detail-open');
+  // Kapag ang Bumalik ang pinindot, bawiin din ang naitalang hakbang.
+  if(!fromHistory && history.state && history.state.mbDetail){
+    try{ history.back(); }catch(err){ /* hayaan */ }
+  }
 }
 
 (function(){
   document.getElementById('mbSearch').addEventListener('input', renderMobileList);
-  document.getElementById('mbBack').addEventListener('click', closeMobileDetail);
+  document.getElementById('mbBack').addEventListener('click', ()=> closeMobileDetail());
+
+  // Back button ng telepono / browser
+  window.addEventListener('popstate', ()=> closeMobileDetail(true));
+
+  document.getElementById('mbFloat').addEventListener('click', ()=>{
+    localStorage.setItem(MOBILE_PREF_KEY, 'mobile');
+    applyViewMode();
+    window.scrollTo(0, 0);
+  });
   document.getElementById('mbToDesktop').addEventListener('click', ()=>{
     localStorage.setItem(MOBILE_PREF_KEY, 'desktop');
     applyViewMode();
-    showToast('Nasa buong sistema ka na. Puwede kang bumalik sa mobile view sa ilalim ng sidebar.');
+    showToast('Nasa buong sistema ka na. Pindutin ang button sa kanang ibaba para bumalik.');
   });
 
   // Kapag binago ang laki ng bintana at walang sadyang napili, sumunod dito.
