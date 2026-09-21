@@ -377,6 +377,139 @@
     .sf9-scaler{ border:none !important; border-radius:0 !important; }
   }
   @page{ size: 8.5in 11in; margin: 0.5in; }
+  
+  /* =========================================================
+     MOBILE PREVIEW — para sa telepono at tablet.
+     Tingnan lamang; walang pag-eencode. Puwedeng lumipat sa
+     buong sistema kung talagang kailangan.
+     ========================================================= */
+  #mobileApp{ display:none; }
+  body.mobile-mode #mobileApp{ display:block; }
+  body.mobile-mode .app{ display:none; }
+  body.mobile-mode{ background:var(--paper); }
+
+  .mb-top{
+    position:sticky; top:0; z-index:20;
+    padding-top:calc(12px + env(safe-area-inset-top,0px));
+    padding-bottom:12px; padding-left:16px; padding-right:16px;
+    background:linear-gradient(160deg,var(--navy-deep),var(--navy));
+    color:#fff; box-shadow:0 2px 10px rgba(0,0,0,.16);
+  }
+  .mb-top .sch{ font-family:'Lora',serif; font-weight:600; font-size:15px; line-height:1.3; }
+  .mb-top .sub{ font-size:11.5px; opacity:.72; margin-top:2px; }
+  .mb-body{ padding:14px 14px calc(28px + env(safe-area-inset-bottom,0px)); max-width:640px; margin:0 auto; }
+
+  .mb-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .mb-stat{
+    background:var(--paper-card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:10px 8px; text-align:center;
+  }
+  .mb-stat b{ display:block; font-size:19px; color:var(--navy-deep); font-family:'Lora',serif; }
+  .mb-stat span{ font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+
+  .mb-search{
+    width:100%; padding:11px 13px; font-size:15px; font-family:inherit;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--paper-card); color:var(--ink); margin-bottom:12px;
+  }
+  .mb-search:focus{ outline:2px solid var(--gold-soft); border-color:var(--gold); }
+
+  .mb-group{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--ink-soft); margin:14px 0 6px; font-weight:700;
+  }
+  .mb-item{
+    display:flex; align-items:center; gap:11px; width:100%;
+    background:var(--paper-card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:11px 12px; margin-bottom:7px;
+    font-family:inherit; text-align:left; cursor:pointer; color:var(--ink);
+  }
+  .mb-item:active{ background:#f0ece1; }
+  .mb-item .chip{
+    flex:0 0 auto; width:34px; height:34px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-weight:700; color:#fff;
+  }
+  .mb-item .chip.m{ background:var(--male); }
+  .mb-item .chip.f{ background:var(--female); }
+  .mb-item .nm{ flex:1; min-width:0; }
+  .mb-item .nm b{ display:block; font-size:14px; font-weight:600; }
+  .mb-item .nm span{ display:block; font-size:11px; color:var(--ink-soft); margin-top:1px; }
+  .mb-item .ave{ flex:0 0 auto; font-family:'Lora',serif; font-size:17px; font-weight:600; color:var(--navy-deep); }
+  .mb-item .ave.low{ color:var(--danger); }
+  .mb-item .ave.none{ color:var(--line-strong); font-size:14px; }
+
+  .mb-badge{
+    display:inline-block; font-size:9.5px; font-weight:700; padding:1px 6px;
+    border-radius:20px; margin-left:5px; vertical-align:middle;
+  }
+  .mb-badge.out{ background:#fbeeed; color:var(--danger); border:1px solid #e2c6c2; }
+  .mb-badge.in{ background:#eaf5ee; color:var(--ok); border:1px solid #c3e0cd; }
+
+  /* ---- detail sheet ---- */
+  #mbDetail{
+    position:fixed; inset:0; z-index:60; background:var(--paper);
+    overflow-y:auto; -webkit-overflow-scrolling:touch; display:none;
+  }
+  body.mb-detail-open #mbDetail{ display:block; }
+  .mb-back{
+    display:inline-flex; align-items:center; gap:6px; background:none; border:0;
+    color:#fff; font-family:inherit; font-size:13px; cursor:pointer; padding:0; margin-bottom:9px;
+  }
+  .mb-card{
+    background:var(--paper-card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px; margin-bottom:12px;
+  }
+  .mb-card h3{
+    margin:0 0 10px; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.07em; color:var(--navy); font-weight:700;
+  }
+  .mb-kv{ display:grid; grid-template-columns:repeat(2,1fr); gap:9px 12px; }
+  .mb-kv div span{ display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+  .mb-kv div b{ font-size:13px; font-weight:600; }
+
+  .mb-sub{ border-bottom:1px solid var(--line); padding:8px 0; }
+  .mb-sub:last-child{ border-bottom:0; padding-bottom:0; }
+  .mb-sub .t{ font-size:13px; font-weight:600; margin-bottom:5px; }
+  .mb-sub .terms{ display:flex; gap:6px; }
+  .mb-sub .terms div{
+    flex:1; text-align:center; background:var(--paper); border:1px solid var(--line);
+    border-radius:7px; padding:5px 2px;
+  }
+  .mb-sub .terms div span{ display:block; font-size:9px; color:var(--ink-soft); text-transform:uppercase; }
+  .mb-sub .terms div b{ font-size:14px; font-weight:600; }
+  .mb-sub .terms div.fin{ background:#f3efe2; border-color:var(--line-strong); }
+  .mb-sub .terms div b.low{ color:var(--danger); }
+  .mb-sub .terms div b.na{ color:var(--line-strong); font-weight:400; }
+
+  .mb-gen{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--navy); color:#fff; border-radius:var(--radius);
+    padding:12px 14px; margin-bottom:12px;
+  }
+  .mb-gen .l{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; opacity:.82; }
+  .mb-gen .v{ font-family:'Lora',serif; font-size:26px; font-weight:600; }
+  .mb-gen .r{ font-size:11px; opacity:.86; }
+
+  .mb-att{ display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line); }
+  .mb-att:last-child{ border-bottom:0; }
+  .mb-att.tot{ font-weight:700; border-top:1px solid var(--line-strong); }
+  .mb-att .d{ color:var(--ink-soft); font-size:12px; }
+
+  .mb-cmt{ background:var(--paper); border-radius:7px; padding:9px 11px; margin-bottom:7px; }
+  .mb-cmt .t{ font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+  .mb-cmt .b{ font-size:12.5px; font-style:italic; margin-top:2px; }
+
+  .mb-empty{ text-align:center; padding:34px 14px; color:var(--ink-soft); }
+  .mb-empty .em{ font-size:32px; }
+
+  .mb-switch{
+    display:block; width:100%; margin-top:18px; padding:11px;
+    background:none; border:1px dashed var(--line-strong); border-radius:var(--radius);
+    color:var(--ink-soft); font-family:inherit; font-size:12.5px; cursor:pointer;
+  }
+  .mb-note{ font-size:11px; color:var(--ink-soft); text-align:center; margin-top:9px; line-height:1.6; }
+
   @media (max-width: 880px){
     .sidebar{ display:none; }
     .grid, .grid.g2{ grid-template-columns: 1fr; }
@@ -385,6 +518,62 @@
 </style>
 </head>
 <body>
+
+
+
+<!-- ================= MOBILE PREVIEW ================= -->
+<div id="mobileApp">
+  <div class="mb-top">
+    <div class="sch" id="mbSchool"></div>
+    <div class="sub" id="mbSub"></div>
+  </div>
+  <div class="mb-body">
+    <div class="mb-stats" id="mbStats"></div>
+    <input class="mb-search" id="mbSearch" type="search" placeholder="Hanapin ang pangalan..." autocomplete="off">
+    <div id="mbList"></div>
+    <button class="mb-switch" id="mbToDesktop">Buksan ang buong sistema (desktop view)</button>
+    <p class="mb-note">Tingnan lamang ang bersiyong ito. Gamitin ang computer para sa pag-eencode at pag-download ng mga form.</p>
+  </div>
+</div>
+
+<div id="mbDetail">
+  <div class="mb-top">
+    <button class="mb-back" id="mbBack">&#8592; Bumalik sa listahan</button>
+    <div class="sch" id="mbDetailName"></div>
+    <div class="sub" id="mbDetailSub"></div>
+  </div>
+  <div class="mb-body" id="mbDetailBody"></div>
+</div>
+
+<!-- ================= STATUS DIALOG ================= -->
+<div id="statusOverlay" hidden style="position:fixed; inset:0; z-index:120; background:rgba(20,41,63,.55); display:none; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--paper-card); border-radius:14px; box-shadow:var(--shadow); width:100%; max-width:420px; padding:24px 24px 20px;">
+    <div style="font-family:'Lora',serif; font-weight:600; font-size:16px; color:var(--navy-deep);">Katayuan ng Mag-aaral</div>
+    <div id="statusDlgName" style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;"></div>
+
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div class="field">
+        <label>Status</label>
+        <select id="statusDlgStatus"></select>
+      </div>
+      <div class="field" id="statusDlgDateWrap">
+        <label>Petsa ng bisa (effectivity)</label>
+        <input type="date" id="statusDlgDate">
+      </div>
+      <div class="field" id="statusDlgNoteWrap">
+        <label id="statusDlgNoteLabel">Dahilan</label>
+        <input type="text" id="statusDlgNote" placeholder="Dahilan">
+      </div>
+    </div>
+
+    <p id="statusDlgHint" style="font-size:11.5px; color:var(--ink-soft); line-height:1.6; margin:14px 0 0;"></p>
+
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:18px;">
+      <button class="btn" id="statusDlgCancel">Kanselahin</button>
+      <button class="btn btn-primary" id="statusDlgSave">I-save</button>
+    </div>
+  </div>
+</div>
 
 <!-- ================= CLOUD LOGIN OVERLAY ================= -->
 <div id="authOverlay" style="position:fixed; inset:0; z-index:100; background:linear-gradient(160deg, var(--navy-deep), var(--navy)); display:flex; align-items:center; justify-content:center; padding:20px;">
@@ -457,6 +646,9 @@
     <button class="nav-btn" data-view="sf9"><span class="ic">&#128196;</span> SF9 – Performance Report</button>
     <button class="nav-btn disabled" data-view="sf10"><span class="ic">&#128193;</span> SF10 – Permanent Record <span class="soon">Phase 3</span></button>
 
+    <div class="nav-group-label">Portal</div>
+    <button class="nav-btn" data-view="portal"><span class="ic">&#128274;</span> Digital Card Access</button>
+
     <div class="nav-group-label">Attendance & Awards</div>
     <button class="nav-btn" data-view="attendance"><span class="ic">&#128197;</span> Attendance</button>
     <button class="nav-btn" data-view="awards"><span class="ic">&#127942;</span> Awards</button>
@@ -466,6 +658,8 @@
     <button class="nav-btn" data-view="versions"><span class="ic">&#8635;</span> Version History</button>
 
     <div class="sidebar-foot">
+      <button class="nav-btn" id="btnToMobile" style="width:100%; margin-bottom:8px;"><span class="ic">&#128241;</span> Mobile preview</button>
+
       Data is saved in this browser only (local storage). Use Export regularly to back up.
     </div>
   </aside>
@@ -667,6 +861,7 @@
               <th style="width:118px;">Birthdate</th>
               <th style="width:56px;">Age</th>
               <th style="width:130px;">Date Admitted</th>
+              <th style="width:150px;">Status</th>
               <th style="width:64px;"></th>
             </tr>
           </thead>
@@ -1038,6 +1233,58 @@
       <div id="sf9BulkPrintArea" style="display:none;"></div>
     </div>
     <div class="view" id="view-sf10" hidden><div class="placeholder-view"><div class="em">&#128193;</div><h2>SF10 — Permanent Record</h2><p>Buong academic record ng mag-aaral, kasama ang eligibility at general average.</p><div class="phase-tag">Coming in Phase 3</div></div></div>
+    <!-- ========== DIGITAL CARD ACCESS VIEW ========== -->
+    <div class="view" id="view-portal" hidden>
+      <div class="letterhead" id="portalLetterhead"></div>
+
+      <div class="card">
+        <h2><span class="num">1</span> Paano ito gumagana</h2>
+        <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.7;">
+          Maglagay ng email sa bawat bata sa talahanayan sa ibaba. Magsa-sign up sila sa
+          student portal gamit ang email na 'yun at magse-set ng sariling password. Kailangan nilang
+          i-click ang verification link na ipapadala sa email nila bago sila makapasok.
+          <strong>Makikita lang nila ang card nila kapag binuksan mo sa ibaba</strong> — kaya puwede mong
+          hintayin munang dumalo ang magulang sa Card Viewing.
+        </p>
+        <div class="toolbar" style="margin-top:12px;">
+          <button class="btn btn-gold" id="btnPublishCards">&#128228; I-publish ang mga binuksang card</button>
+          <div class="spacer"></div>
+          <span id="portalPublishInfo" style="font-size:11.5px; color:var(--ink-soft);"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">2</span> Access kada mag-aaral</h2>
+        <div class="toolbar" style="margin-bottom:12px;">
+          <button class="btn btn-sm" id="btnPortalOpenAll">Buksan lahat</button>
+          <button class="btn btn-sm" id="btnPortalCloseAll">Isara lahat</button>
+          <div class="spacer"></div>
+          <span style="font-size:11.5px; color:var(--ink-soft);">Ang pagbubukas ay nagkakabisa pagkatapos mong pindutin ang <strong>I-publish</strong>.</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table id="portalTable">
+          <thead>
+            <tr>
+              <th style="width:36px;">No.</th>
+              <th style="width:80px;">ID</th>
+              <th>Pangalan</th>
+              <th style="width:240px;">Email (para sa portal)</th>
+              <th style="width:120px;">Access</th>
+              <th style="width:150px;">Katayuan</th>
+            </tr>
+          </thead>
+          <tbody id="portalTbody"></tbody>
+        </table>
+        <div class="empty-state" id="portalEmptyState" hidden>
+          <div class="em">&#128274;</div>
+          <h2>Wala pang mag-aaral</h2>
+          <p>Magdagdag muna sa Masterlist.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ========== ATTENDANCE VIEW ========== -->
     <div class="view" id="view-attendance" hidden>
       <div class="letterhead" id="attLetterhead"></div>
@@ -1547,7 +1794,7 @@ const titles = {
   eclass: ['E-Class Record', 'Standalone gradebook for subjects you teach outside your advisory class'],
   sf9: ['SF9 — Learner\'s Performance Report', 'Select a learner to generate the printable form'],
   sf10: ['SF10 — Permanent Record', 'Waiting for official DepEd release'],
-  attendance: ['Attendance', 'Monthly attendance log per learner'],
+  portal: ['Digital Card Access', 'Buksan ang online na card kada mag-aaral pagkatapos ng Card Viewing'],  attendance: ['Attendance', 'Monthly attendance log per learner'],
   awards: ['Awards', 'Honor ranking and certificate of merit'],
   archives: ['Archived School Years', 'Read-only records from past school years'],
   versions: ['Version History', 'Daily snapshots and manual checkpoints for this device'],
@@ -1568,6 +1815,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     if(v === 'summary'){ renderSummaryView(); }
     if(v === 'report'){ renderReportView(); }
     if(v === 'eclass'){ renderEclassList(); }
+    if(v === 'portal'){ renderPortalView(); }
     if(v === 'attendance'){ renderAttendanceView(); }
     if(v === 'awards'){ renderAwardsView(); }
     if(v === 'archives'){ renderArchivesList(); }
@@ -1832,7 +2080,8 @@ function calcAge(birthdateStr){
 function addStudent(sex){
   students.push({
     id: uid(), sex, lastName:'', firstName:'', middleName:'', nameExt:'',
-    lrn:'', birthdate:'', dateAdmission: new Date().toISOString().slice(0,10)
+    lrn:'', birthdate:'', dateAdmission: new Date().toISOString().slice(0,10),
+    status:'ACTIVE', statusDate:'', statusNote:'', email:''
   });
   saveStudents(students);
   renderMasterlist();
@@ -1867,6 +2116,65 @@ function updateStudent(id, field, value){
   flashSaved();
   if(field === 'sex'){ renderMasterlist(); }
   if(field === 'birthdate'){ renderMasterlist(); }
+  if(field === 'status'){
+    // Kapag ibinalik sa Aktibo, linisin ang petsa at dahilan.
+    if(isActiveStatus(s)){ s.statusDate = ''; s.statusNote = ''; saveStudents(students); }
+    else if(!s.statusDate){ s.statusDate = new Date().toISOString().slice(0,10); saveStudents(students); }
+    renderMasterlist();
+  }
+}
+
+
+/* =========================================================
+   KATAYUAN NG MAG-AARAL (learner status)
+   Ang bawat status ay may petsa ng bisa. Ginagamit ito ng SF2
+   para sa REMARKS column at sa Summary for the Month, at ng
+   attendance grid para hindi na mamarkahan ang mga araw na wala
+   na (o wala pa) ang bata sa klase.
+   ========================================================= */
+const STUDENT_STATUSES = [
+  { key:'ACTIVE',          label:'Aktibo',                 remark:'',                 dir:null,  sf2Row:null },
+  { key:'DROPPED',         label:'Dropped Out',            remark:'Dropped out',      dir:'out', sf2Row:79 },
+  { key:'NLIS',            label:'No Longer in School',    remark:'No longer in school', dir:'out', sf2Row:79 },
+  { key:'TRANSFERRED_OUT', label:'Transferred Out',        remark:'Transferred out',  dir:'out', sf2Row:81 },
+  { key:'TRANSFERRED_IN',  label:'Transferred In',         remark:'Transferred in',   dir:'in',  sf2Row:83 }
+];
+function statusInfo(key){
+  return STUDENT_STATUSES.find(s=>s.key === (key || 'ACTIVE')) || STUDENT_STATUSES[0];
+}
+function isActiveStatus(s){ return !s.status || s.status === 'ACTIVE'; }
+
+/* Nasa klase pa ba ang bata sa petsang ito? Walang petsa ng bisa =
+   ituring na buong panahon siyang nasa klase. */
+function studentEnrolledOn(s, dateObj){
+  const info = statusInfo(s.status);
+  if(!info.dir || !s.statusDate) return true;
+  const eff = new Date(s.statusDate + 'T00:00:00');
+  if(isNaN(eff)) return true;
+  // Palabas: hanggang bisperas lang ng petsa. Papasok: mula sa mismong petsa.
+  return info.dir === 'out' ? (dateObj < eff) : (dateObj >= eff);
+}
+
+/* Bumisa ba ang status sa loob ng buwang ito? — para sa SF2 summary. */
+function statusEffectiveInMonth(s, month){
+  const info = statusInfo(s.status);
+  if(!info.dir || !s.statusDate) return false;
+  const eff = new Date(s.statusDate + 'T00:00:00');
+  if(isNaN(eff)) return false;
+  return eff.getFullYear() === yearForMonth(month) && eff.getMonth() === MONTH_JS_INDEX[month];
+}
+
+/* Teksto para sa REMARK/S column ng SF2. */
+function studentRemarkText(s){
+  const info = statusInfo(s.status);
+  if(!info.dir) return '';
+  const parts = [info.remark];
+  if(s.statusDate){
+    const d = new Date(s.statusDate + 'T00:00:00');
+    if(!isNaN(d)) parts.push(d.toLocaleDateString('en-US', { month:'2-digit', day:'2-digit', year:'numeric' }));
+  }
+  if(s.statusNote) parts.push('- ' + s.statusNote);
+  return parts.join(' ');
 }
 
 /* Forms spell the sex out in full — "Male" / "Female" — never M/F. */
@@ -1920,7 +2228,9 @@ function renderMasterlist(){
 
     const trh = document.createElement('tr');
     trh.className = 'section-row';
-    trh.innerHTML = `<td colspan="11">${sexLabel} (${list.length})</td>`;
+    const activeCount = list.filter(isActiveStatus).length;
+    const extra = activeCount !== list.length ? ` — ${activeCount} aktibo` : '';
+    trh.innerHTML = `<td colspan="12">${sexLabel} (${list.length})${extra}</td>`;
     tbody.appendChild(trh);
 
     list.forEach((s, i)=>{
@@ -1939,6 +2249,7 @@ function renderMasterlist(){
         <td><input class="f-birthdate" type="date" value="${escapeHtml(s.birthdate)}"></td>
         <td style="text-align:center; color:var(--ink-soft);">${calcAge(s.birthdate)}</td>
         <td><input class="f-dateAdmission" type="date" value="${escapeHtml(s.dateAdmission)}"></td>
+        <td>${statusChipHtml(s)}</td>
         <td class="row-actions">
           <button class="icon-btn del" title="Delete" data-del="${s.id}">&#128465;</button>
         </td>
@@ -1951,6 +2262,13 @@ function renderMasterlist(){
       bind('.f-lastName','lastName'); bind('.f-firstName','firstName');
       bind('.f-middleName','middleName'); bind('.f-nameExt','nameExt');
       bind('.f-lrn','lrn'); bind('.f-birthdate','birthdate'); bind('.f-dateAdmission','dateAdmission');
+      tr.querySelector('[data-status-btn]').addEventListener('click', ()=> openStatusDialog(s.id));
+
+      // Bahagyang kupas ang hilera ng wala nang nag-aaral, para agad makita.
+      if(!isActiveStatus(s)){
+        tr.style.opacity = '0.6';
+        tr.style.background = 'rgba(0,0,0,0.025)';
+      }
       tr.querySelector('[data-del]').addEventListener('click', ()=> deleteStudent(s.id));
     });
   }
@@ -4295,8 +4613,10 @@ function renderSF2View(){
   const monthData = getMonthData(attMonth);
   const extra = getSF2Extra(attMonth);
   const schoolDays = days.filter(dy => !monthData.holidays.includes(dy.day));
-  const males = students.filter(s=>s.sex==='MALE');
-  const females = students.filter(s=>s.sex==='FEMALE');
+  // Tulad ng na-export na SF2, ang nakikita ay ang mga nasa klase sa buwang ito.
+  const listed  = students.filter(s => sf2AppearsInMonth(s, attMonth));
+  const males   = listed.filter(s=>s.sex==='MALE');
+  const females = listed.filter(s=>s.sex==='FEMALE');
   const monthLabel = attMonth.charAt(0) + attMonth.slice(1).toLowerCase();
   const year = yearForMonth(attMonth);
 
@@ -4305,19 +4625,22 @@ function renderSF2View(){
     return days.map(dy=>{
       const isHoliday = monthData.holidays.includes(dy.day);
       if(isHoliday) return '';
-      const presentCount = list.filter(s => !sf2DayAbsent(s.id, attMonth, dy.day)).length;
+      const presentCount = list.filter(s => sf2EnrolledOnDay(s, attMonth, dy.day)
+                                        && !sf2DayAbsent(s.id, attMonth, dy.day)).length;
       return presentCount;
     });
   }
 
   function studentRow(s, i){
     const fullName = `${s.lastName || '(no name)'}, ${s.firstName || ''} ${s.middleName ? s.middleName[0]+'.' : ''}`.trim();
-    const totals = studentMonthTotals(s.id, attMonth);
+    const totals = sf2EnrolledTotals(s, attMonth);
     const converted = lateConvertedDays(s.id, attMonth);
     const dayCells = days.map(dy=>{
       const isHoliday = monthData.holidays.includes(dy.day);
-      const isAbsent = sf2DayAbsent(s.id, attMonth, dy.day, converted);
-      return `<td style="text-align:center; ${isHoliday?'background:#f6f4ee;':''}">${isHoliday?'':(isAbsent?'x':'')}</td>`;
+      const notYet = !sf2EnrolledOnDay(s, attMonth, dy.day);
+      const isAbsent = !notYet && sf2DayAbsent(s.id, attMonth, dy.day, converted);
+      const shade = isHoliday ? 'background:#f6f4ee;' : (notYet ? 'background:#efeae0;' : '');
+      return `<td style="text-align:center; ${shade}">${(isHoliday||notYet)?'':(isAbsent?'x':'')}</td>`;
     }).join('');
     const remark = extra.remarks[s.id] || '';
     return `<tr>
@@ -4613,6 +4936,88 @@ function xmlSetCellFormula(xml, ref, formula){
   });
 }
 
+
+/* Buwan bilang tuloy-tuloy na bilang, para madaling ikumpara. */
+function monthOrdinal(month){
+  return yearForMonth(month) * 12 + MONTH_JS_INDEX[month];
+}
+function statusMonthOrdinal(s){
+  if(!s.statusDate) return null;
+  const d = new Date(s.statusDate + 'T00:00:00');
+  if(isNaN(d)) return null;
+  return d.getFullYear() * 12 + d.getMonth();
+}
+
+/* Dapat bang nasa listahan ng SF2 ang bata sa buwang ito?
+   Ayon sa gabay ng DepEd, ang SF2 ay listahan ng kasalukuyang enrolment:
+   - Papalabas (dropped / transferred out / NLIS): kasama pa rin sa buwan
+     ng pag-alis — may remarks at bilang — pero wala na sa mga susunod.
+   - Papasok (transferred in): wala pa sa mga naunang buwan, kasama na
+     mula sa buwan ng pagpasok. */
+function sf2AppearsInMonth(s, month){
+  const info = statusInfo(s.status);
+  if(!info.dir) return true;
+  const eff = statusMonthOrdinal(s);
+  if(eff === null) return true;          // walang petsa — huwag itago
+  const cur = monthOrdinal(month);
+  return info.dir === 'out' ? (cur <= eff) : (cur >= eff);
+}
+
+/* Ang "Enrolment as of 1st Friday" ay hindi nagbabago buong taon, kaya
+   hindi kasama rito ang mga transferred in na dumating sa gitna ng taon. */
+function sf2BaselineEnrolment(list){
+  return list.filter(s => statusInfo(s.status).dir !== 'in').length;
+}
+
+/* Nasa klase ba ang bata sa araw na ito ng buwan? */
+function sf2EnrolledOnDay(s, month, day){
+  return studentEnrolledOn(s, new Date(yearForMonth(month), MONTH_JS_INDEX[month], day));
+}
+
+/* Buwanang absent/late, hindi binibilang ang mga araw na wala pa o wala na
+   ang bata — para hindi lumabas na absent ang isang transferred out. */
+function sf2EnrolledTotals(s, month){
+  if(isActiveStatus(s)) return studentMonthTotals(s.id, month);
+  const weeks = sf2DateWeekGrid(month);
+  const monthData = getMonthData(month);
+  const converted = lateConvertedDays(s.id, month);
+  const marks = (monthData.marks && monthData.marks[s.id]) || {};
+  let absent = 0, late = 0;
+  weeks.forEach(w=>{
+    [1,2,3,4,5].forEach(k=>{
+      const day = w[k];
+      if(!day || monthData.holidays.includes(day)) return;
+      if(!sf2EnrolledOnDay(s, month, day)) return;
+      if(sf2DayAbsent(s.id, month, day, converted)) absent++;
+      if(marks[day] === 'L') late++;
+    });
+  });
+  return { absent, late };
+}
+
+/* Bilang ng mga nasa klase sa dulo ng buwan — ito ang "Registered Learner
+   as of end of the month" sa SF2. */
+function sf2EnrolledAtMonthEnd(list, month){
+  const y = yearForMonth(month), mi = MONTH_JS_INDEX[month];
+  const lastDay = new Date(y, mi+1, 0);
+  return list.filter(s => studentEnrolledOn(s, lastDay)).length;
+}
+
+/* Ilang araw ng pasok ang talagang saklaw ng bata sa buwang ito. */
+function sf2EnrolledSchoolDays(s, month){
+  const weeks = sf2DateWeekGrid(month);
+  const monthData = getMonthData(month);
+  let n = 0;
+  weeks.forEach(w=>{
+    [1,2,3,4,5].forEach(k=>{
+      const day = w[k];
+      if(!day || monthData.holidays.includes(day)) return;
+      if(sf2EnrolledOnDay(s, month, day)) n++;
+    });
+  });
+  return n;
+}
+
 async function buildSF2WorkbookXlsx(month){
   if(typeof JSZip === 'undefined'){ showToast('Hindi ma-load ang library. Suriin ang internet connection.', true); return null; }
   const path = SF2W_SHEETS[month];
@@ -4845,8 +5250,10 @@ async function buildSF2Xml(){
   const monthData = getMonthData(month);
   const weeks = sf2DateWeekGrid(month);
   const schoolDaysCount = weeks.reduce((n,w)=> n + [1,2,3,4,5].filter(k=>w[k]!==null && !monthData.holidays.includes(w[k])).length, 0);
-  const males = students.filter(s=>s.sex==='MALE');
-  const females = students.filter(s=>s.sex==='FEMALE');
+  // Ang listahan ay ang mga nasa klase sa buwang ito lamang.
+  const listed  = students.filter(s => sf2AppearsInMonth(s, month));
+  const males   = listed.filter(s=>s.sex==='MALE');
+  const females = listed.filter(s=>s.sex==='FEMALE');
   if(males.length > (SF2_MALE_END - SF2_MALE_START + 1) || females.length > (SF2_FEMALE_END - SF2_FEMALE_START + 1)){
     showToast('Babala: hindi kasya sa isang pahina ng template — may estudyanteng hindi malalagay.', true);
   }
@@ -4892,14 +5299,18 @@ async function buildSF2Xml(){
           let mark = '';
           if(s){
             const dayVal = weeks[w] ? weeks[w][k] : null;
-            if(dayVal && sf2DayAbsent(s.id, month, dayVal, converted)) mark = 'x';
+            // Blangko ang mga araw na wala pa o wala na ang bata sa klase —
+            // hindi sila absent, hindi lang sila enrolled sa petsang iyon.
+            if(dayVal && sf2EnrolledOnDay(s, month, dayVal)
+               && sf2DayAbsent(s.id, month, dayVal, converted)) mark = 'x';
           }
           xml = xmlSetCellText(xml, ref, mark);
         }
       }
-      const t = s ? studentMonthTotals(s.id, month) : null;
+      const t = s ? sf2EnrolledTotals(s, month) : null;
       xml = xmlSetCellNumber(xml, 'AC' + row, t ? t.absent : ''); // Absent (month total, includes 3-late=1-absent conversion)
       xml = xmlSetCellNumber(xml, 'AD' + row, t ? t.late : ''); // Tardy (raw late count)
+      xml = xmlSetCellText(xml, 'AE' + row, s ? studentRemarkText(s) : '');
     }
   }
   writeSection(males, SF2_MALE_START, SF2_MALE_END);
@@ -4939,22 +5350,42 @@ async function buildSF2Xml(){
       const dayVal = weeks[w] ? weeks[w][k] : null;
       if(!dayVal){ xml = xmlSetCellNumber(xml, ref, ''); continue; }
       let presentCount = 0;
-      students.forEach(s=>{
+      listed.forEach(s=>{
+        if(!sf2EnrolledOnDay(s, month, dayVal)) return;   // wala pa / wala na sa klase
         if(!sf2DayAbsent(s.id, month, dayVal)) presentCount++;
       });
       xml = xmlSetCellNumber(xml, ref, presentCount);
     }
   }
-  const combinedTotals = students.map(s=>studentMonthTotals(s.id, month));
+  const combinedTotals = listed.map(s=>sf2EnrolledTotals(s, month));
   const combinedAbsent = combinedTotals.reduce((n,t)=>n+t.absent,0);
   const combinedLate = combinedTotals.reduce((n,t)=>n+t.late,0);
   xml = xmlSetCellNumber(xml, 'AC' + SF2_COMBINED_TOTAL_ROW, combinedAbsent);
   xml = xmlSetCellNumber(xml, 'AD' + SF2_COMBINED_TOTAL_ROW, combinedLate);
 
   // ---- summary block (AH=Male, AI=Female, AJ=Total) ----
-  const enrolled = { m: males.length, f: females.length, t: students.length };
-  const totalPresentDays = students.reduce((n,s)=> n + studentMonthTotals(s.id, month).present, 0);
-  const pctAttendance = (enrolled.t > 0 && schoolDaysCount > 0) ? (totalPresentDays / (enrolled.t * schoolDaysCount)) * 100 : 0;
+  /* "Enrolment as of 1st Friday" ay ang buong listahan; ang "Registered
+     Learner as of end of the month" ay ang natitira pa sa dulo ng buwan
+     (bawas ang transferred/dropped out, dagdag ang transferred in). */
+  const allMales   = students.filter(s=>s.sex==='MALE');
+  const allFemales = students.filter(s=>s.sex==='FEMALE');
+  const enrolled = {
+    m: sf2BaselineEnrolment(allMales),
+    f: sf2BaselineEnrolment(allFemales)
+  };
+  enrolled.t = enrolled.m + enrolled.f;
+  const registered = {
+    m: sf2EnrolledAtMonthEnd(allMales, month),
+    f: sf2EnrolledAtMonthEnd(allFemales, month)
+  };
+  registered.t = registered.m + registered.f;
+  const totalPresentDays = listed.reduce((n,s)=> {
+    const tot = sf2EnrolledTotals(s, month);
+    return n + (isActiveStatus(s) ? studentMonthTotals(s.id, month).present
+                                  : Math.max(0, sf2EnrolledSchoolDays(s, month) - tot.absent));
+  }, 0);
+  const possibleDays = listed.reduce((n,s)=> n + sf2EnrolledSchoolDays(s, month), 0);
+  const pctAttendance = possibleDays > 0 ? (totalPresentDays / possibleDays) * 100 : 0;
   const males5 = males.filter(s=>sf2HasFiveConsecutiveAbsences(s.id, month)).length;
   const females5 = females.filter(s=>sf2HasFiveConsecutiveAbsences(s.id, month)).length;
 
@@ -4965,13 +5396,22 @@ async function buildSF2Xml(){
   }
   writeSummaryTriplet(66, enrolled.m, enrolled.f, enrolled.t);       // Enrolment as of 1st Friday
   writeSummaryTriplet(68, 0, 0, 0);                                   // Late Enrollment
-  writeSummaryTriplet(70, enrolled.m, enrolled.f, enrolled.t);       // Registered Learner as of end of month
-  writeSummaryTriplet(72, 100, 100, 100);                             // % Enrolment as of end of month
+  writeSummaryTriplet(70, registered.m, registered.f, registered.t); // Registered Learner as of end of month
+  const pctEnrol = (a,b) => b > 0 ? Math.round((a/b)*1000)/10 : 0;
+  writeSummaryTriplet(72, pctEnrol(registered.m, enrolled.m),
+                          pctEnrol(registered.f, enrolled.f),
+                          pctEnrol(registered.t, enrolled.t));        // % Enrolment as of end of month
   writeSummaryTriplet(75, Math.round(pctAttendance*10)/10, Math.round(pctAttendance*10)/10, Math.round(pctAttendance*10)/10); // % Attendance for the month
   writeSummaryTriplet(77, males5, females5, males5+females5);       // 5 consecutive absences
-  writeSummaryTriplet(79, 0, 0, 0);                                   // Drop out
-  writeSummaryTriplet(81, 0, 0, 0);                                   // Transferred out
-  writeSummaryTriplet(83, 0, 0, 0);                                   // Transferred in
+  /* Ang bilang dito ay para lamang sa mga bumisa sa loob ng buwang ito. */
+  const movedThisMonth = (rowKey) => {
+    const hit = s => statusInfo(s.status).sf2Row === rowKey && statusEffectiveInMonth(s, month);
+    const m = allMales.filter(hit).length, f = allFemales.filter(hit).length;
+    return [m, f, m + f];
+  };
+  writeSummaryTriplet(79, ...movedThisMonth(79));                     // Drop out (kasama ang No Longer in School)
+  writeSummaryTriplet(81, ...movedThisMonth(81));                     // Transferred out
+  writeSummaryTriplet(83, ...movedThisMonth(83));                     // Transferred in
 
   // ---- signatories ----
   xml = xmlSetCellText(xml, 'AD88', (d.adviser || '').toUpperCase());
@@ -6599,18 +7039,541 @@ document.getElementById('btnDownloadRatingSheet').addEventListener('click', asyn
 });
 
 
+
+
+
+/* =========================================================
+   MOBILE PREVIEW
+   Sa telepono, ang bubukas ay isang magaan na bersiyong
+   pang-tingin lamang. Nananatili ang buong sistema — puwedeng
+   lumipat doon kahit kailan, at naaalala ang napili.
+   ========================================================= */
+const MOBILE_PREF_KEY = 'sms_view_mode_v1';   // 'mobile' | 'desktop'
+const MOBILE_MAX_WIDTH = 820;
+
+function deviceLooksMobile(){
+  const narrow = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`).matches;
+  const touch  = window.matchMedia('(pointer: coarse)').matches;
+  return narrow || (touch && window.innerWidth <= 1024);
+}
+
+function mobileModeActive(){
+  const pref = localStorage.getItem(MOBILE_PREF_KEY);
+  if(pref === 'desktop') return false;
+  if(pref === 'mobile')  return true;
+  return deviceLooksMobile();
+}
+
+function applyViewMode(){
+  const on = mobileModeActive();
+  document.body.classList.toggle('mobile-mode', on);
+  if(on) renderMobileList();
+  else closeMobileDetail();
+}
+
+/* ---- listahan ---- */
+function mbAverage(s){
+  const rows = sf9CollectSubjectRows(s.id, gctx.gradeLevel);
+  const finals = Object.keys(rows).map(k => sf9SubjectFinal(rows[k]))
+                       .filter(v => v !== null && v !== undefined);
+  if(!sf9AllTermsComplete(rows) || !finals.length) return null;
+  return Math.round(finals.reduce((a,b)=>a+b,0)/finals.length);
+}
+
+function mbStatusBadge(s){
+  if(isActiveStatus(s)) return '';
+  const info = statusInfo(s.status);
+  return `<span class="mb-badge ${info.dir === 'in' ? 'in' : 'out'}">${info.label}</span>`;
+}
+
+function renderMobileList(){
+  const d = setupData;
+  document.getElementById('mbSchool').textContent = d.schoolName || 'Student Management System';
+  document.getElementById('mbSub').textContent =
+    [d.track, [gctx.gradeLevel && ('Grade ' + gctx.gradeLevel), d.section].filter(Boolean).join(' '), d.schoolYear]
+      .filter(Boolean).join(' — ');
+
+  const males = students.filter(s=>s.sex==='MALE');
+  const females = students.filter(s=>s.sex==='FEMALE');
+  const active = students.filter(isActiveStatus).length;
+  document.getElementById('mbStats').innerHTML = `
+    <div class="mb-stat"><b>${males.length}</b><span>Male</span></div>
+    <div class="mb-stat"><b>${females.length}</b><span>Female</span></div>
+    <div class="mb-stat"><b>${active}</b><span>Aktibo</span></div>`;
+
+  const q = (document.getElementById('mbSearch').value || '').trim().toLowerCase();
+  const list = document.getElementById('mbList');
+  list.innerHTML = '';
+
+  if(students.length === 0){
+    list.innerHTML = '<div class="mb-empty"><div class="em">&#128203;</div>'
+      + '<p>Wala pang mag-aaral. Gamitin ang computer para makapagdagdag.</p></div>';
+    return;
+  }
+
+  let shown = 0;
+  [['Male', males], ['Female', females]].forEach(([label, arr])=>{
+    const hits = arr.filter(s=>{
+      if(!q) return true;
+      return `${s.lastName || ''} ${s.firstName || ''} ${s.middleName || ''} ${s.lrn || ''}`
+              .toLowerCase().includes(q);
+    });
+    if(!hits.length) return;
+    const h = document.createElement('div');
+    h.className = 'mb-group';
+    h.textContent = `${label} (${hits.length})`;
+    list.appendChild(h);
+
+    hits.forEach(s=>{
+      shown++;
+      const ave = mbAverage(s);
+      const idx = arr.indexOf(s) + 1;
+      const cls = ave === null ? 'none' : (ave < 75 ? 'low' : '');
+      const btn = document.createElement('button');
+      btn.className = 'mb-item';
+      btn.innerHTML = `
+        <span class="chip ${s.sex === 'MALE' ? 'm' : 'f'}">${studentIdLabel(s.sex, idx)}</span>
+        <span class="nm">
+          <b>${escapeHtml(`${s.lastName || '(walang pangalan)'}, ${s.firstName || ''}`.trim())}${mbStatusBadge(s)}</b>
+          <span>${escapeHtml(s.lrn || 'Walang LRN')}</span>
+        </span>
+        <span class="ave ${cls}">${ave === null ? '—' : ave}</span>`;
+      btn.addEventListener('click', ()=> openMobileDetail(s.id));
+      list.appendChild(btn);
+    });
+  });
+
+  if(shown === 0){
+    list.innerHTML = '<div class="mb-empty"><div class="em">&#128269;</div>'
+      + '<p>Walang tugma sa hinahanap mo.</p></div>';
+  }
+}
+
+/* ---- detalye ng isang bata ---- */
+function openMobileDetail(studentId){
+  const s = students.find(x => x.id === studentId);
+  if(!s) return;
+  const card = portalBuildCard(s);
+
+  document.getElementById('mbDetailName').textContent = card.name || '(walang pangalan)';
+  document.getElementById('mbDetailSub').textContent =
+    [card.lrn && ('LRN ' + card.lrn), card.sex].filter(Boolean).join(' — ');
+
+  const g = v => (v === null || v === undefined || v === '') ? '—' : v;
+  const bad = v => (v !== null && v !== undefined && v < 75) ? 'low' : '';
+
+  const info = statusInfo(s.status);
+  const statusBlock = isActiveStatus(s) ? '' : `
+    <div class="mb-card" style="border-color:${info.dir === 'in' ? '#c3e0cd' : '#e2c6c2'};
+         background:${info.dir === 'in' ? '#eaf5ee' : '#fbeeed'};">
+      <h3>Katayuan</h3>
+      <div style="font-size:13px; font-weight:600;">${escapeHtml(studentRemarkText(s))}</div>
+    </div>`;
+
+  const subs = (card.subjects || []).map(sub=>{
+    const cell = (k, label) => {
+      if(sub.offered && sub.offered[k] === false)
+        return `<div><span>${label}</span><b class="na">—</b></div>`;
+      const v = sub.terms[k];
+      return `<div><span>${label}</span><b class="${bad(v)}">${g(v)}</b></div>`;
+    };
+    return `<div class="mb-sub">
+      <div class="t">${escapeHtml(sub.name)}</div>
+      <div class="terms">
+        ${cell('1','1st')}${cell('2','2nd')}${cell('3','3rd')}
+        <div class="fin"><span>Final</span><b class="${bad(sub.final)}">${g(sub.final)}</b></div>
+      </div></div>`;
+  }).join('');
+
+  const att = card.attendance || { months: [], totals: {} };
+  const attRows = (att.months || []).map(m=>{
+    const label = m.month.charAt(0) + m.month.slice(1).toLowerCase();
+    return `<div class="mb-att"><span>${escapeHtml(label)}</span>
+      <span class="d">${m.present} / ${m.classDays} araw${m.absent ? ` &middot; ${m.absent} absent` : ''}</span></div>`;
+  }).join('');
+  const at = att.totals || {};
+  const attTotal = (att.months || []).length
+    ? `<div class="mb-att tot"><span>Kabuuan</span>
+       <span>${at.present} / ${at.classDays}${at.absent ? ` &middot; ${at.absent} absent` : ''}</span></div>` : '';
+
+  const cm = card.comments || {};
+  const cmts = ['1','2','3'].filter(k => (cm[k] || '').trim())
+    .map(k => `<div class="mb-cmt"><div class="t">Term ${k}</div><div class="b">${escapeHtml(cm[k])}</div></div>`)
+    .join('');
+
+  const genCls = card.general === null ? '' : (card.general < 75 ? 'style="background:var(--danger);"' : '');
+
+  document.getElementById('mbDetailBody').innerHTML = `
+    ${statusBlock}
+    <div class="mb-gen" ${genCls}>
+      <div><div class="l">General Average</div>${card.remarks ? `<div class="r">${escapeHtml(card.remarks)}</div>` : ''}</div>
+      <div class="v">${g(card.general)}</div>
+    </div>
+
+    <div class="mb-card">
+      <h3>Impormasyon</h3>
+      <div class="mb-kv">
+        <div><span>Grade &amp; Section</span><b>${escapeHtml([card.gradeLevel, card.section].filter(Boolean).join(' - ')) || '—'}</b></div>
+        <div><span>Track</span><b>${escapeHtml(card.track) || '—'}</b></div>
+        <div><span>Kasarian</span><b>${escapeHtml(card.sex) || '—'}</b></div>
+        <div><span>Adviser</span><b>${escapeHtml(card.adviser) || '—'}</b></div>
+      </div>
+    </div>
+
+    <div class="mb-card">
+      <h3>Mga Marka</h3>
+      ${subs || '<p style="font-size:12.5px; color:var(--ink-soft); margin:0;">Wala pang naitalang marka.</p>'}
+    </div>
+
+    <div class="mb-card">
+      <h3>Talaan ng Pagpasok</h3>
+      ${attRows ? attRows + attTotal : '<p style="font-size:12.5px; color:var(--ink-soft); margin:0;">Wala pang naitalang pagpasok.</p>'}
+    </div>
+
+    ${cmts ? `<div class="mb-card"><h3>Komento ng Adviser</h3>${cmts}</div>` : ''}
+  `;
+
+  document.body.classList.add('mb-detail-open');
+  document.getElementById('mbDetail').scrollTop = 0;
+}
+
+function closeMobileDetail(){
+  document.body.classList.remove('mb-detail-open');
+}
+
+(function(){
+  document.getElementById('mbSearch').addEventListener('input', renderMobileList);
+  document.getElementById('mbBack').addEventListener('click', closeMobileDetail);
+  document.getElementById('mbToDesktop').addEventListener('click', ()=>{
+    localStorage.setItem(MOBILE_PREF_KEY, 'desktop');
+    applyViewMode();
+    showToast('Nasa buong sistema ka na. Puwede kang bumalik sa mobile view sa ilalim ng sidebar.');
+  });
+
+  // Kapag binago ang laki ng bintana at walang sadyang napili, sumunod dito.
+  window.addEventListener('resize', ()=>{
+    if(!localStorage.getItem(MOBILE_PREF_KEY)) applyViewMode();
+  });
+})();
+
+/* =========================================================
+   STATUS DIALOG — isang button kada hilera sa Masterlist,
+   para hindi masikip ang talahanayan.
+   ========================================================= */
+function statusChipHtml(s){
+  const info = statusInfo(s.status);
+  const active = isActiveStatus(s);
+  const colour = active ? 'var(--ink-soft)' : (info.dir === 'in' ? 'var(--ok)' : 'var(--danger)');
+  const bg     = active ? 'transparent'     : (info.dir === 'in' ? '#eaf5ee' : '#fbeeed');
+  const border = active ? 'var(--line)'     : (info.dir === 'in' ? '#c3e0cd' : '#e2c6c2');
+  let label = info.label;
+  if(!active && s.statusDate){
+    const d = new Date(s.statusDate + 'T00:00:00');
+    if(!isNaN(d)) label += ' &middot; ' + d.toLocaleDateString('en-US', { month:'2-digit', day:'2-digit' });
+  }
+  const title = active ? 'Palitan ang katayuan' : (studentRemarkText(s) || 'Palitan ang katayuan');
+  return `<button data-status-btn="${s.id}" title="${escapeHtml(title)}"
+    style="width:100%; text-align:left; cursor:pointer; font-family:inherit; font-size:11.5px;
+           padding:5px 8px; border-radius:6px; border:1px solid ${border}; background:${bg};
+           color:${colour}; font-weight:600;">${label}</button>`;
+}
+
+let statusDlgId = null;
+
+function statusDlgRefresh(){
+  const key = document.getElementById('statusDlgStatus').value;
+  const info = statusInfo(key);
+  const out = !!info.dir;
+  document.getElementById('statusDlgDateWrap').style.display = out ? 'block' : 'none';
+  document.getElementById('statusDlgNoteWrap').style.display = out ? 'block' : 'none';
+  const isTransfer = key === 'TRANSFERRED_OUT' || key === 'TRANSFERRED_IN';
+  document.getElementById('statusDlgNoteLabel').textContent = isTransfer ? 'Pangalan ng paaralan' : 'Dahilan';
+  document.getElementById('statusDlgNote').placeholder = isTransfer ? 'Hal.: Lopez National High School' : 'Hal.: Lumipat ng tirahan';
+  const hint = document.getElementById('statusDlgHint');
+  if(!out){
+    hint.textContent = 'Kasama sa lahat ng form at bilang ng buong taon.';
+  } else if(info.dir === 'out'){
+    hint.textContent = 'Sa SF2, kasama pa rin siya sa buwan ng pag-alis — may remarks at bilang. '
+                     + 'Sa mga susunod na buwan ay wala na sa listahan.';
+  } else {
+    hint.textContent = 'Sa SF2, wala pa siya sa mga naunang buwan. Lilitaw siya mula sa buwan ng pagpasok.';
+  }
+}
+
+function openStatusDialog(studentId){
+  const s = students.find(x => x.id === studentId);
+  if(!s) return;
+  statusDlgId = studentId;
+
+  const fullName = `${s.lastName || ''}, ${s.firstName || ''} ${s.middleName || ''}`.replace(/\s+/g,' ').trim();
+  document.getElementById('statusDlgName').textContent = fullName || '(walang pangalan)';
+
+  const sel = document.getElementById('statusDlgStatus');
+  sel.innerHTML = STUDENT_STATUSES
+    .map(st=>`<option value="${st.key}">${st.label}</option>`).join('');
+  sel.value = s.status || 'ACTIVE';
+  document.getElementById('statusDlgDate').value = s.statusDate || '';
+  document.getElementById('statusDlgNote').value = s.statusNote || '';
+
+  statusDlgRefresh();
+  const ov = document.getElementById('statusOverlay');
+  ov.hidden = false;
+  ov.style.display = 'flex';
+  setTimeout(()=> sel.focus(), 30);
+}
+
+function closeStatusDialog(){
+  const ov = document.getElementById('statusOverlay');
+  ov.hidden = true;
+  ov.style.display = 'none';
+  statusDlgId = null;
+}
+
+(function(){
+  const sel = document.getElementById('statusDlgStatus');
+  sel.addEventListener('change', ()=>{
+    // Kapag lumipat sa hindi-aktibo at walang petsa, ilagay ang ngayon.
+    const info = statusInfo(sel.value);
+    const dateEl = document.getElementById('statusDlgDate');
+    if(info.dir && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+    statusDlgRefresh();
+  });
+
+  document.getElementById('statusDlgCancel').addEventListener('click', closeStatusDialog);
+  document.getElementById('statusOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'statusOverlay') closeStatusDialog();
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && document.getElementById('statusOverlay').style.display === 'flex') closeStatusDialog();
+  });
+
+  document.getElementById('statusDlgSave').addEventListener('click', ()=>{
+    const s = students.find(x => x.id === statusDlgId);
+    if(!s) return closeStatusDialog();
+    const key = document.getElementById('statusDlgStatus').value;
+    const info = statusInfo(key);
+    s.status = key;
+    if(!info.dir){
+      // Ibinalik sa Aktibo — linisin ang petsa at dahilan.
+      s.statusDate = ''; s.statusNote = '';
+    } else {
+      s.statusDate = document.getElementById('statusDlgDate').value || '';
+      s.statusNote = document.getElementById('statusDlgNote').value.trim();
+      if(!s.statusDate){
+        showToast('Kailangan ng petsa ng bisa para sa katayuang ito.', true);
+        return;
+      }
+    }
+    saveStudents(students);
+    flashSaved();
+    closeStatusDialog();
+    renderMasterlist();
+    if(typeof renderPortalView === 'function' && !document.getElementById('view-portal').hidden){
+      renderPortalView();
+    }
+  });
+})();
+
+/* =========================================================
+   DIGITAL CARD ACCESS
+   Ang bawat binuksang bata ay may sariling dokumento sa
+   koleksiyong "cards". Doon lang siya may access — hindi niya
+   kailanman mababasa ang buong data ng klase.
+   ========================================================= */
+const PORTAL_STORE_KEY = 'sms_portal_access_v1';
+let portalAccess = loadJSON(PORTAL_STORE_KEY, {});   // { studentId: true }
+function savePortalAccess(){ saveJSON(PORTAL_STORE_KEY, portalAccess); }
+
+function portalEmailOf(s){ return (s.email || '').trim().toLowerCase(); }
+
+/* Ang buwan kung saan may klase, para sa attendance ng card. */
+function portalAttendance(studentId){
+  const months = [];
+  let totDays = 0, totPresent = 0, totAbsent = 0;
+  SF9_MONTHS.forEach(m=>{
+    if(!monthHasStarted(m)) return;
+    const t = studentMonthTotals(studentId, m);
+    if(t.totalDays === 0) return;
+    months.push({ month: m, classDays: t.totalDays, present: t.present, absent: t.absent });
+    totDays += t.totalDays; totPresent += t.present; totAbsent += t.absent;
+  });
+  return { months, totals: { classDays: totDays, present: totPresent, absent: totAbsent } };
+}
+
+/* Buong laman ng card ng isang bata — ito lamang ang naka-imbak sa cloud. */
+function portalBuildCard(s){
+  const d = setupData;
+  const bySubject = sf9CollectSubjectRows(s.id, gctx.gradeLevel);
+  const subjects = Object.keys(bySubject).map(name=>{
+    const e = bySubject[name];
+    return {
+      name,
+      category: e.category || '',
+      terms: { '1': e.terms['1'], '2': e.terms['2'], '3': e.terms['3'] },
+      offered: e.offered || { 1:true, 2:true, 3:true },
+      final: sf9SubjectFinal(e)
+    };
+  });
+
+  const termAve = t => {
+    const vals = subjects
+      .filter(x => x.offered[t])
+      .map(x => x.terms[t])
+      .filter(v => v !== null && v !== undefined);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+  };
+  const complete = sf9AllTermsComplete(bySubject);
+  const finals = subjects.map(x=>x.final).filter(v=>v !== null && v !== undefined);
+  const general = complete && finals.length
+    ? Math.round(finals.reduce((a,b)=>a+b,0)/finals.length) : null;
+
+  const cm = commentsData[s.id] || {};
+  return {
+    email: portalEmailOf(s),
+    released: true,
+    name: `${s.lastName || ''}, ${s.firstName || ''} ${s.middleName || ''}`.replace(/\s+/g,' ').trim().toUpperCase(),
+    lrn: s.lrn || '',
+    sex: sexLabel(s.sex),
+    gradeLevel: gctx.gradeLevel || '',
+    section: d.section || '',
+    track: d.track || '',
+    school: {
+      name: d.schoolName || '', id: d.schoolId || '',
+      region: d.region || '', division: d.division || '',
+      district: d.district || '', schoolYear: d.schoolYear || ''
+    },
+    adviser: d.adviser || '',
+    subjects,
+    termAverages: { '1': termAve('1'), '2': termAve('2'), '3': termAve('3') },
+    general,
+    remarks: general === null ? '' : (general >= 75 ? 'Passed' : 'Failed'),
+    attendance: portalAttendance(s.id),
+    comments: { '1': cm['1'] || '', '2': cm['2'] || '', '3': cm['3'] || '' },
+    updatedAt: Date.now()
+  };
+}
+
+function renderPortalView(){
+  if(typeof renderLetterhead === 'function'){
+    const lh = document.getElementById('portalLetterhead');
+    const src = document.getElementById('letterhead');
+    if(lh && src) lh.innerHTML = src.innerHTML;
+  }
+  const tbody = document.getElementById('portalTbody');
+  tbody.innerHTML = '';
+  document.getElementById('portalEmptyState').hidden = students.length !== 0;
+
+  const males = students.filter(s=>s.sex==='MALE');
+  const females = students.filter(s=>s.sex==='FEMALE');
+
+  function group(list, label){
+    if(list.length === 0) return;
+    const trh = document.createElement('tr');
+    trh.className = 'section-row';
+    trh.innerHTML = `<td colspan="6">${label} (${list.length})</td>`;
+    tbody.appendChild(trh);
+
+    list.forEach((s, i)=>{
+      const tr = document.createElement('tr');
+      const email = portalEmailOf(s);
+      const on = !!portalAccess[s.id];
+      const fullName = `${s.lastName || '(no name)'}, ${s.firstName || ''}`.trim();
+      let state, colour;
+      if(!email){ state = 'Walang email'; colour = 'var(--ink-soft)'; }
+      else if(on){ state = 'Bukas'; colour = 'var(--ok)'; }
+      else { state = 'Sarado'; colour = 'var(--danger)'; }
+
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td><span class="idchip ${s.sex==='MALE'?'male':'female'}">${studentIdLabel(s.sex, i+1)}</span></td>
+        <td>${escapeHtml(fullName)}</td>
+        <td><input class="p-email" type="email" value="${escapeHtml(s.email)}" placeholder="email@example.com" style="width:100%; font-size:12px;"></td>
+        <td style="text-align:center;">
+          <input type="checkbox" data-portal-toggle="${s.id}" ${on ? 'checked' : ''} ${email ? '' : 'disabled'}>
+        </td>
+        <td style="font-weight:600; color:${colour};">${state}</td>
+      `;
+      tbody.appendChild(tr);
+      const mail = tr.querySelector('.p-email');
+      mail.addEventListener('input', (e)=>{
+        const st = students.find(x => x.id === s.id);
+        if(!st) return;
+        st.email = e.target.value;
+        saveStudents(students);
+        flashSaved();
+      });
+      // Pag-alis ng focus: saka i-refresh para maayos ang checkbox at katayuan.
+      mail.addEventListener('change', ()=>{
+        const st = students.find(x => x.id === s.id);
+        if(st && !portalEmailOf(st)) delete portalAccess[st.id];
+        savePortalAccess();
+        renderPortalView();
+      });
+
+      const box = tr.querySelector('[data-portal-toggle]');
+      if(box){
+        box.addEventListener('change', (e)=>{
+          if(e.target.checked) portalAccess[s.id] = true;
+          else delete portalAccess[s.id];
+          savePortalAccess();
+          renderPortalView();
+        });
+      }
+    });
+  }
+  group(males, 'Male');
+  group(females, 'Female');
+}
+
+/* Isinusulat ang mga binuksang card, at binubura ang mga isinarang. */
+async function portalPublish(){
+  if(!fbAvailable || !currentUser){
+    showToast('Kailangan munang naka-sign in sa cloud bago mag-publish.', true);
+    return;
+  }
+  const info = document.getElementById('portalPublishInfo');
+  const withEmail = students.filter(s => portalEmailOf(s));
+  const noEmail = students.filter(s => portalAccess[s.id] && !portalEmailOf(s));
+  if(noEmail.length){
+    showToast(`May ${noEmail.length} binuksan na walang email — lagyan muna sa Masterlist.`, true);
+  }
+
+  let opened = 0, closed = 0;
+  try{
+    for(const s of withEmail){
+      const ref = fbDb.collection('cards').doc(portalEmailOf(s));
+      if(portalAccess[s.id]){
+        const card = portalBuildCard(s);
+        card.ownerUid = currentUser.uid;
+        await ref.set(card);
+        opened++;
+      } else {
+        await ref.delete().catch(()=>{});   // wala pang dokumento — ayos lang
+        closed++;
+      }
+    }
+    const stamp = new Date().toLocaleString('en-PH');
+    if(info) info.textContent = `Huling na-publish: ${stamp} — ${opened} bukas, ${closed} sarado.`;
+    showToast(`Na-publish: ${opened} bukas, ${closed} sarado.`);
+  }catch(err){
+    console.error(err);
+    showToast('May error sa pag-publish. Suriin ang security rules sa Firebase.', true);
+  }
+}
+
 /* ============================================================
-   Ligtas na pag-encode ng grado
-   - Hindi na nababago ang halaga kapag na-scroll ang mouse sa
-     ibabaw ng isang number input (aksidenteng pagbabago ng grado).
-   - Enter  = pababa sa kasunod na estudyante, parehong column.
-   - Shift+Enter = pabalik sa nakaraang estudyante.
-   - Tab    = pakanan sa kasunod na box (default ng browser).
+   Ligtas at mabilis na pag-eencode — saklaw ang buong sistema
+   - Hindi nababago ang halaga kapag na-scroll ang mouse sa ibabaw
+     ng isang number input (aksidenteng pagbabago ng naka-encode).
+   - Enter        = pababa sa kasunod na hilera, parehong column.
+   - Shift+Enter  = pabalik sa nakaraang hilera.
+   - Tab          = pakanan sa kasunod na box (default ng browser).
+   Sa dulo ng isang column, lumilipat sa simula ng susunod na column.
    ============================================================ */
 (function(){
   /* Ang number input ay nagbabago ng halaga kapag naka-focus at
      na-scroll. Inaalis natin ang focus para tuluy-tuloy pa rin ang
-     pag-scroll ng pahina ngunit hindi nagagalaw ang naka-encode na grado. */
+     pag-scroll ng pahina ngunit hindi nagagalaw ang naka-encode na data. */
   document.addEventListener('wheel', (e)=>{
     const t = e.target;
     if(t && t.tagName === 'INPUT' && t.type === 'number' && document.activeElement === t){
@@ -6618,26 +7581,53 @@ document.getElementById('btnDownloadRatingSheet').addEventListener('click', asyn
     }
   }, { passive: true });
 
-  /* Mga input na sinasaklaw ng Enter navigation */
-  const NAV_SELECTOR = '.gradeInput, #ecScoreTable input[type="number"]';
+  /* Mga box na saklaw ng Enter navigation. Hindi kasama ang textarea
+     (kailangan doon ang Enter para sa bagong linya), ang search box,
+     at ang mga naka-disable o nakatago. */
+  const SKIP_TYPES = ['checkbox','radio','button','submit','reset','file','range','color'];
+  function isNavField(el){
+    if(!el || el.disabled || el.readOnly) return false;
+    const tag = el.tagName;
+    if(tag === 'SELECT') return true;
+    if(tag !== 'INPUT') return false;
+    if(SKIP_TYPES.includes(el.type)) return false;
+    if(el.id === 'searchBox') return false;
+    if(el.closest('[data-no-enter-nav]')) return false;
+    return true;
+  }
+  function isVisible(el){
+    return !!(el.offsetParent || el.getClientRects().length);
+  }
+  function navFields(root){
+    return Array.from((root || document).querySelectorAll('input, select'))
+                .filter(el => isNavField(el) && isVisible(el));
+  }
 
-  function columnKey(inp){
-    // Grade Input: iisang column = parehong subject at field.
-    // E-Class Record: iisang column = parehong item.
-    const d = inp.dataset;
-    return d.iid ? 'ec:' + d.iid : 'gr:' + d.subid + ':' + d.field;
+  /* Ang "column" ng isang box: kapag nasa talahanayan, ang posisyon ng
+     hanay nito sa loob ng talahanayang iyon. Kung hindi, isang column
+     na lang ang buong grupo at DOM order ang susundin. */
+  function columnOf(el){
+    const cell = el.closest('td, th');
+    const table = el.closest('table');
+    if(cell && table) return { table, index: cell.cellIndex };
+    return null;
+  }
+  function sameColumn(a, b){
+    if(!a || !b) return a === b;
+    return a.table === b.table && a.index === b.index;
   }
 
   document.addEventListener('keydown', (e)=>{
-    if(e.key !== 'Enter') return;
-    const inp = e.target;
-    if(!inp.matches || !inp.matches(NAV_SELECTOR)) return;
+    if(e.key !== 'Enter' || e.altKey || e.ctrlKey || e.metaKey) return;
+    const el = e.target;
+    if(!isNavField(el)) return;
     e.preventDefault();
 
-    const all = Array.from(document.querySelectorAll(NAV_SELECTOR));
-    const key = columnKey(inp);
-    const column = all.filter(el => columnKey(el) === key);
-    const idx = column.indexOf(inp);
+    // Sa loob ng talahanayan: ang grupo ay ang mismong talahanayan lamang.
+    const col = columnOf(el);
+    const all = navFields(col ? col.table : null);
+    const column = col ? all.filter(x => sameColumn(columnOf(x), col)) : all;
+    const idx = column.indexOf(el);
     if(idx === -1) return;
 
     let next = column[idx + (e.shiftKey ? -1 : 1)];
@@ -6645,27 +7635,56 @@ document.getElementById('btnDownloadRatingSheet').addEventListener('click', asyn
       // Dulo na ng column — lumipat sa simula ng susunod na column
       // (o sa dulo ng nakaraang column kapag Shift+Enter).
       const keys = [];
-      all.forEach(el=>{ const k = columnKey(el); if(!keys.includes(k)) keys.push(k); });
-      const ki = keys.indexOf(key) + (e.shiftKey ? -1 : 1);
+      all.forEach(x=>{
+        const k = columnOf(x);
+        if(!keys.some(o => sameColumn(o, k))) keys.push(k);
+      });
+      const ki = keys.findIndex(k => sameColumn(k, col)) + (e.shiftKey ? -1 : 1);
       if(ki >= 0 && ki < keys.length){
-        const target = all.filter(el => columnKey(el) === keys[ki]);
+        const target = all.filter(x => sameColumn(columnOf(x), keys[ki]));
         next = e.shiftKey ? target[target.length - 1] : target[0];
       }
     }
-    if(next){ next.focus(); next.select && next.select(); }
+    if(next){
+      next.focus();
+      if(next.select){ try { next.select(); } catch(err){ /* date/select: walang select() */ } }
+    }
   });
 
-  /* Kapag pumasok sa isang box, naka-highlight agad ang laman para
-     mapalitan kaagad — hindi na kailangang burahin muna. */
+  /* Kapag pumasok sa isang box, naka-highlight agad ang dating laman
+     para mapalitan kaagad — hindi na kailangang burahin muna. */
   document.addEventListener('focusin', (e)=>{
-    const t = e.target;
-    if(t && t.matches && t.matches(NAV_SELECTOR) && t.select) t.select();
+    const el = e.target;
+    if(!isNavField(el) || el.tagName === 'SELECT') return;
+    if(el.select){ try { el.select(); } catch(err){ /* hindi lahat ng type ay may select() */ } }
   });
 })();
+
+
+document.getElementById('btnToMobile').addEventListener('click', ()=>{
+  localStorage.setItem(MOBILE_PREF_KEY, 'mobile');
+  applyViewMode();
+});
+
+document.getElementById('btnPortalOpenAll').addEventListener('click', ()=>{
+  students.forEach(s=>{ if(portalEmailOf(s)) portalAccess[s.id] = true; });
+  savePortalAccess(); renderPortalView();
+});
+document.getElementById('btnPortalCloseAll').addEventListener('click', ()=>{
+  portalAccess = {}; savePortalAccess(); renderPortalView();
+});
+document.getElementById('btnPublishCards').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnPublishCards');
+  const t = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Pini-publish...';
+  try { await portalPublish(); }
+  finally { btn.disabled = false; btn.textContent = t; }
+});
 
 /* Initial render */
 renderMasterlist();
 maybeCreateDailyVersion();
+applyViewMode();
 </script>
 </body>
 </html>
